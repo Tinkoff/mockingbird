@@ -1,0 +1,38 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  front-build:
+    runs-on: ubuntu-latest
+    
+    env:
+      PORT: 3000
+      APP_ID: mockingbird
+      NODE_ENV: production
+      RELATIVE_PATH: /mockingbird
+      ASSETS_FOLDER_NAME: /assets
+      ASSETS_PREFIX: /mockingbird/assets/
+      MOCKINGBIRD_API: /api/internal/mockingbird
+      MOCKINGBIRD_EXEC_API: /api/mockingbird/exec
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Build
+        working-directory: ./frontend
+        run: |
+          rm env.development.js
+          mkdir -p ./dist/out${ASSETS_FOLDER_NAME}
+          npm install
+          npm run build
+
+      - name: Copy output
+        working-directory: ./frontend/dist
+        run: | 
+          cp -r ./static${RELATIVE_PATH}/. ./out
+          cp -a ./client/. ./out${ASSETS_FOLDER_NAME}
