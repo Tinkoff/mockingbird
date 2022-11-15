@@ -1,0 +1,33 @@
+.root {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  word-break: break-word;
+}
+
+.block {
+  &:last-child {
+    min-width: 100px;
+    margin-left: 16px;
+    text-align: right;
+  }
+
+  & > * + * {
+    margin-top: 4px;
+  }
+}
+
+.blockLinks {
+  composes: block;
+}
+
+.blockLinks > * {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+  line-height: 20px;
+
+  &:first-child {
+    line-height: 24px;
+  }
+}

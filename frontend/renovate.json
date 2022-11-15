@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "config:base",
+    ":preserveSemverRanges"
+  ],
+  "stabilityDays": 3,
+  "packageRules": [
+    {
+      "packagePatterns": ["^@tramvai/cli"],
+      "groupName": "Tramvai cli packages"
+    },
+    {
+      "packagePatterns": ["^@tramvai"],
+      "groupName": "tramvai packages"
+    }
+  ]
+}

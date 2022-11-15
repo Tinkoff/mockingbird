@@ -1,0 +1,39 @@
+{
+  "name": "ui-packages",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "16"
+  },
+  "dependencies": {
+    "@platform-ui/accordion": "3.20.4",
+    "@platform-ui/attachFile": "2.15.5",
+    "@platform-ui/badge": "4.17.0",
+    "@platform-ui/block": "2.6.4",
+    "@platform-ui/button": "2.31.0",
+    "@platform-ui/form": "4.2.0",
+    "@platform-ui/input": "6.32.2",
+    "@platform-ui/iconsPack": "2.48.1",
+    "@platform-ui/inputCount": "3.11.1",
+    "@platform-ui/inputSearchTagged": "1.5.10",
+    "@platform-ui/island": "5.1.6",
+    "@platform-ui/generateId": "1.3.0",
+    "@platform-ui/label": "3.2.3",
+    "@platform-ui/link": "2.14.0",
+    "@platform-ui/loader": "3.7.2",
+    "@platform-ui/navigation": "3.37.4",
+    "@platform-ui/notification": "3.12.5",
+    "@platform-ui/pageHeader": "5.2.7",
+    "@platform-ui/popup": "4.2.5",
+    "@platform-ui/portal": "3.5.0",
+    "@platform-ui/select": "7.38.9",
+    "@platform-ui/tabsBlock": "2.10.2",
+    "@platform-ui/text": "6.1.0",
+    "@platform-ui/textarea": "4.13.1",
+    "@platform-ui/toggle": "3.3.3",
+    "@platform-ui/tooltip": "3.21.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
+    "react-hook-form": "7.22.5"
+  }
+}

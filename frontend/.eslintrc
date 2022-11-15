@@ -1,0 +1,7 @@
+{
+    "extends": [
+        "@tinkoff/eslint-config/app",
+        "@tinkoff/eslint-config-react",
+        "plugin:@tinkoff/tramvai/recommended"
+    ]
+}

@@ -1,0 +1,72 @@
+syntax = 'proto3';
+
+option java_package = 'ru.tinkoff.tcb.reference.grpc';
+
+message BrandAndModelRequest {
+  string vin = 1;
+}
+
+message CarGenRequest {
+  int32 brandId = 1;
+  int32 modelId = 2;
+  int32 year = 3;
+}
+
+message CarSearchRequest {
+  optional string text = 1;
+  optional int32 year = 2;
+  optional int32 brandId = 3;
+  optional int32 limit = 4;
+  optional string wuid = 5;
+}
+
+message CarConfigurationsRequest {
+  int32 brandId = 1;
+  int32 modelId = 2;
+  int32 year = 3;
+  optional int32 generationId = 4;
+  optional bool allGenerations = 5;
+}
+
+enum Condition {
+  NEW_CAR = 0;
+  USED_CAR = 1;
+}
+
+message CarPriceRequest {
+  int32 brandId = 1;
+  int32 modelId = 2;
+  optional int32 generationId = 3;
+  optional int32 bodyId = 4;
+  optional int32 modificationId = 5;
+  optional int32 transmissionId = 6;
+  optional int32 fuelId = 7;
+  optional int32 wheelDriveId = 8;
+  optional int32 engineId = 9;
+  int32 year = 10;
+  optional Condition condition = 11;
+}
+
+message PreciseCarPriceRequest {
+  int64 configurationId = 1;
+  optional Condition condition = 2;
+}
+
+message PriceRequest {
+  oneof body {
+    CarPriceRequest request = 2;
+    PreciseCarPriceRequest preciseRequest = 3;
+  }
+  oneof body2 {
+    string request2 = 4;
+    int32 preciseRequest2 = 5;
+  }
+  string field = 1;
+}
+
+message MemoRequest {
+  int32 brandId = 1;
+  int32 modelId = 2;
+  string wuid = 3;
+  map<string, PreciseCarPriceRequest> req = 4;
+}

@@ -1,0 +1,18 @@
+.root > * + * {
+  margin-top: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row > * + * {
+  margin-left: 16px;
+}
+
+.buttonMore {
+  display: flex;
+  justify-content: center;
+}

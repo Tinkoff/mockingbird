@@ -1,0 +1,17 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  & > * + * {
+    margin-left: 16px;
+  }
+}
+
+.description {
+  margin-top: 8px;
+}
+
+.json {
+  margin-top: 12px;
+}

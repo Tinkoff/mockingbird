@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/@tramvai/cli/schema.json",
+  "projects": {
+    "mockingbird": {
+      "name": "mockingbird",
+      "root": "src/mockingbird",
+      "type": "application",
+      "commands": {
+        "build": {
+          "options": {
+            "server": "src/mockingbird/index.ts",
+            "vendor": "src/vendor.ts"
+          },
+          "configurations": {
+            "sourceMap": true,
+            "postcss": {
+              "config": "src/mockingbird/postcss"
+            }
+          }
+        },
+        "serve": {
+          "configurations": {
+            "hotRefresh": true,
+            "modern": true
+          }
+        }
+      }
+    }
+  }
+}
