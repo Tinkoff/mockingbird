@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   front-build:
     runs-on: ubuntu-latest
-    
+
     env:
       PORT: 3000
       APP_ID: mockingbird
@@ -15,6 +15,7 @@ jobs:
       ASSETS_PREFIX: /mockingbird/assets/
       MOCKINGBIRD_API: /api/internal/mockingbird
       MOCKINGBIRD_EXEC_API: /api/mockingbird/exec
+      DEBUG_PLAIN: true
 
     steps:
       - uses: actions/checkout@v3
@@ -24,15 +25,15 @@ jobs:
           node-version: 16
 
       - name: Build
-        working-directory: ./frontend
         run: |
-          rm env.development.js
+          cd frontend
+          rm ./env.development.js
           mkdir -p ./dist/out${ASSETS_FOLDER_NAME}
           npm install
           npm run build
 
       - name: Copy output
-        working-directory: ./frontend/dist
-        run: | 
-          cp -r ./static${RELATIVE_PATH}/. ./out
-          cp -a ./client/. ./out${ASSETS_FOLDER_NAME}
+        run: |
+          cd frontend
+          cp -r ./dist/static${RELATIVE_PATH}/. ./dist/out
+          cp -a ./dist/client/. ./dist/out${ASSETS_FOLDER_NAME}
