@@ -20,4 +20,4 @@ Additional notes.
 - [ ] Add `[WIP]` to the pull request title if it's work in progress
 - [ ] [Squash commits](https://ariejan.net/2011/07/05/git-squash-your-latests-commits-into-one) that aren't meaningful changes
 
-@oolong/maintainers
+@mockingbird/maintainers
