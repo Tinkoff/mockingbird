@@ -128,7 +128,7 @@ object Settings {
         dockerExposedPorts := ports,
         dockerExposedVolumes := Seq(logDir), // создаст и выдаст права на директорию
         dockerRepository := ciDockerRegistry.map(_ + "/tcb"),
-        dockerBaseImage := "eclipse-temurin:17",
+        dockerBaseImage := "eclipse-temurin:17-jre-focal",
         dockerCommands := dockerCommands.value.patch(
           8,
           Seq(
