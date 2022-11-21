@@ -37,3 +37,9 @@ jobs:
           cd frontend
           cp -r ./dist/static${RELATIVE_PATH}/. ./dist/out
           cp -a ./dist/client/. ./dist/out${ASSETS_FOLDER_NAME}
+
+      - name: Upload output directories
+        uses: actions/upload-artifact@v3
+        with:
+          name: front-static
+          path: frontend/dist/out
