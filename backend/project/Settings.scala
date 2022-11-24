@@ -94,8 +94,8 @@ object Settings {
       entryPoint: String,
       appName: String,
       ports: List[Int],
-      user: String = "teamcity",
-      userId: Option[String] = Some("516")
+      user: String = "mockingbird",
+      userId: Option[String] = Some("2048")
   ): Project => Project = { prj: Project =>
     import com.typesafe.sbt.packager.archetypes.jar.LauncherJarPlugin
     import com.typesafe.sbt.packager.docker.{Cmd, DockerPermissionStrategy}
@@ -107,7 +107,6 @@ object Settings {
     import com.typesafe.sbt.GitVersioning
     import com.typesafe.sbt.SbtGit.git
 
-    val logDir = s"/opt/log/$appName"
     prj
       .enablePlugins(GitVersioning, DockerPlugin, LauncherJarPlugin)
       .settings(
@@ -126,7 +125,6 @@ object Settings {
           s"$branch-$commit"
         },
         dockerExposedPorts := ports,
-        dockerExposedVolumes := Seq(logDir), // создаст и выдаст права на директорию
         dockerRepository := ciDockerRegistry.map(_ + "/tcb"),
         dockerBaseImage := "eclipse-temurin:17-jre-focal",
         dockerCommands := dockerCommands.value.patch(
@@ -144,10 +142,7 @@ object Settings {
         Universal / javaOptions := Seq(
           "-XX:+UseG1GC",
           "-XX:G1HeapRegionSize=2M",
-          "-XX:G1ReservePercent=20",
-          s"-Xlog:gc+ergo*=debug:file=$logDir/tcb-gc.%t.%p.log:time,uptime,level,tags:filecount=5,filesize=4M",
-          "-XX:+HeapDumpOnOutOfMemoryError",
-          s"-XX:HeapDumpPath=$logDir/last-heap-dump.hprof",
+          "-XX:G1ReservePercent=20"
         ).map("-J" + _),
       )
   }
