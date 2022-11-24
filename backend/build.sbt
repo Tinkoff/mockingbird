@@ -145,10 +145,6 @@ lazy val `mockingbird-native` = (project in file("mockingbird-native"))
       dockerize.value
     ),
     GraalVMNativeImage / graalVMNativeImageOptions += "-H:IncludeResources=.*",
-    GraalVMNativeImage / containerBuildImage := Some(
-      s"ghcr.io/graalvm/native-image:ol8-java17-${Versions.graalvm}"
-    )
-      .filter(_ => dockerize.value),
     nativeImageInstalled := true,
     nativeImageAgentMerge := true,
     run / javaOptions += "-Dconfig.resource=local.conf",

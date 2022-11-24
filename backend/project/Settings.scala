@@ -94,8 +94,8 @@ object Settings {
       entryPoint: String,
       appName: String,
       ports: List[Int],
-      user: String = "teamcity",
-      userId: Option[String] = Some("516")
+      user: String = "mockingbird",
+      userId: Option[String] = Some("2048")
   ): Project => Project = { prj: Project =>
     import com.typesafe.sbt.packager.archetypes.jar.LauncherJarPlugin
     import com.typesafe.sbt.packager.docker.{Cmd, DockerPermissionStrategy}
@@ -107,7 +107,6 @@ object Settings {
     import com.typesafe.sbt.GitVersioning
     import com.typesafe.sbt.SbtGit.git
 
-    val logDir = s"/opt/log/$appName"
     prj
       .enablePlugins(GitVersioning, DockerPlugin, LauncherJarPlugin)
       .settings(
@@ -126,15 +125,13 @@ object Settings {
           s"$branch-$commit"
         },
         dockerExposedPorts := ports,
-        dockerExposedVolumes := Seq(logDir), // создаст и выдаст права на директорию
         dockerRepository := ciDockerRegistry.map(_ + "/tcb"),
-        dockerBaseImage := "eclipse-temurin:17",
+        dockerBaseImage := "eclipse-temurin:17-jre-focal",
         dockerCommands := dockerCommands.value.patch(
           8,
           Seq(
-            Cmd("RUN", "cp", "/opt/mockingbird/unzip", "/usr/local/bin"),
-            Cmd("RUN", "chmod +x", "/usr/local/bin/unzip"),
-            Cmd("RUN", "rm", "/opt/mockingbird/unzip"),
+            Cmd("RUN", "apt-get", "update"),
+            Cmd("RUN", "apt-get", "install", "-y", "unzip"),
             Cmd("RUN", "unzip", "/opt/mockingbird/protoc-3.20.0-linux-x86_64.zip -d", "/opt/protoc"),
             Cmd("RUN", "rm", "/opt/mockingbird/protoc-3.20.0-linux-x86_64.zip"),
             Cmd("ENV", "PATH=\"$PATH:/opt/protoc/bin:${PATH}\"")
@@ -145,10 +142,7 @@ object Settings {
         Universal / javaOptions := Seq(
           "-XX:+UseG1GC",
           "-XX:G1HeapRegionSize=2M",
-          "-XX:G1ReservePercent=20",
-          s"-Xlog:gc+ergo*=debug:file=$logDir/tcb-gc.%t.%p.log:time,uptime,level,tags:filecount=5,filesize=4M",
-          "-XX:+HeapDumpOnOutOfMemoryError",
-          s"-XX:HeapDumpPath=$logDir/last-heap-dump.hprof",
+          "-XX:G1ReservePercent=20"
         ).map("-J" + _),
       )
   }
@@ -156,9 +150,9 @@ object Settings {
   def dockerNative(
       appName: String,
       ports: List[Int],
-      user: String = "teamcity",
-      userId: Option[String] = Some("516"),
-      imageName: String = "oraclelinux:8-slim"
+      user: String = "mockingbird",
+      userId: Option[String] = Some("2048"),
+      imageName: String = "ubuntu:20.04"
   ): Project => Project = { prj: Project =>
     import com.typesafe.sbt.packager.docker.DockerChmodType
     import com.typesafe.sbt.packager.docker.{Cmd, DockerPermissionStrategy}
@@ -171,7 +165,7 @@ object Settings {
     import com.typesafe.sbt.SbtGit.git
 
     val dockerBasePath = "/opt/docker/bin"
-    val logDir         = s"/opt/log/$appName"
+
     prj
       .enablePlugins(GitVersioning, DockerPlugin)
       .settings(
@@ -193,15 +187,13 @@ object Settings {
           ((GraalVMNativeImage / target).value / name.value) -> ((Docker / defaultLinuxInstallLocation).value + "/" + name.value)
         ),
         dockerExposedPorts := ports,
-        dockerExposedVolumes := Seq(logDir), // создаст и выдаст права на директорию
         dockerRepository := ciDockerRegistry.map(_ + "/tcb"),
         dockerBaseImage := Seq(ciDockerRegistryProxy, Some(imageName)).flatten.mkString("/"),
         dockerCommands := dockerCommands.value.patch(
           5,
           Seq(
-            Cmd("RUN", "cp", "/opt/mockingbird-native/unzip", "/usr/local/bin"),
-            Cmd("RUN", "chmod +x", "/usr/local/bin/unzip"),
-            Cmd("RUN", "rm", "/opt/mockingbird-native/unzip"),
+            Cmd("RUN", "apt-get", "update"),
+            Cmd("RUN", "apt-get", "install", "-y", "unzip"),
             Cmd("RUN", "unzip", "/opt/mockingbird-native/protoc-3.20.0-linux-x86_64.zip -d", "/opt/protoc"),
             Cmd("RUN", "rm", "/opt/mockingbird-native/protoc-3.20.0-linux-x86_64.zip"),
             Cmd("ENV", "PATH=\"$PATH:/opt/protoc/bin:${PATH}\"")
