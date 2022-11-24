@@ -1,5 +1,5 @@
--J-Xms2g
--J-Xmx2g
+-J-Xms1536m
+-J-Xmx1536m
 -J-XX:+AlwaysPreTouch
 -J-XX:ReservedCodeCacheSize=128M
 -J-XX:MaxMetaspaceSize=512M

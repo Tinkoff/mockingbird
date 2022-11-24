@@ -150,9 +150,9 @@ object Settings {
   def dockerNative(
       appName: String,
       ports: List[Int],
-      user: String = "teamcity",
-      userId: Option[String] = Some("516"),
-      imageName: String = "oraclelinux:8-slim"
+      user: String = "mockingbird",
+      userId: Option[String] = Some("2048"),
+      imageName: String = "ubuntu:20.04"
   ): Project => Project = { prj: Project =>
     import com.typesafe.sbt.packager.docker.DockerChmodType
     import com.typesafe.sbt.packager.docker.{Cmd, DockerPermissionStrategy}
@@ -165,7 +165,7 @@ object Settings {
     import com.typesafe.sbt.SbtGit.git
 
     val dockerBasePath = "/opt/docker/bin"
-    val logDir         = s"/opt/log/$appName"
+
     prj
       .enablePlugins(GitVersioning, DockerPlugin)
       .settings(
@@ -187,15 +187,13 @@ object Settings {
           ((GraalVMNativeImage / target).value / name.value) -> ((Docker / defaultLinuxInstallLocation).value + "/" + name.value)
         ),
         dockerExposedPorts := ports,
-        dockerExposedVolumes := Seq(logDir), // создаст и выдаст права на директорию
         dockerRepository := ciDockerRegistry.map(_ + "/tcb"),
         dockerBaseImage := Seq(ciDockerRegistryProxy, Some(imageName)).flatten.mkString("/"),
         dockerCommands := dockerCommands.value.patch(
           5,
           Seq(
-            Cmd("RUN", "cp", "/opt/mockingbird-native/unzip", "/usr/local/bin"),
-            Cmd("RUN", "chmod +x", "/usr/local/bin/unzip"),
-            Cmd("RUN", "rm", "/opt/mockingbird-native/unzip"),
+            Cmd("RUN", "apt-get", "update"),
+            Cmd("RUN", "apt-get", "install", "-y", "unzip"),
             Cmd("RUN", "unzip", "/opt/mockingbird-native/protoc-3.20.0-linux-x86_64.zip -d", "/opt/protoc"),
             Cmd("RUN", "rm", "/opt/mockingbird-native/protoc-3.20.0-linux-x86_64.zip"),
             Cmd("ENV", "PATH=\"$PATH:/opt/protoc/bin:${PATH}\"")
