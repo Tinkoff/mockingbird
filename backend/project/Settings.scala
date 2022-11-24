@@ -132,9 +132,8 @@ object Settings {
         dockerCommands := dockerCommands.value.patch(
           8,
           Seq(
-            Cmd("RUN", "cp", "/opt/mockingbird/unzip", "/usr/local/bin"),
-            Cmd("RUN", "chmod +x", "/usr/local/bin/unzip"),
-            Cmd("RUN", "rm", "/opt/mockingbird/unzip"),
+            Cmd("RUN", "apt-get", "update"),
+            Cmd("RUN", "apt-get", "install", "-y", "unzip"),
             Cmd("RUN", "unzip", "/opt/mockingbird/protoc-3.20.0-linux-x86_64.zip -d", "/opt/protoc"),
             Cmd("RUN", "rm", "/opt/mockingbird/protoc-3.20.0-linux-x86_64.zip"),
             Cmd("ENV", "PATH=\"$PATH:/opt/protoc/bin:${PATH}\"")
