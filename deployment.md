@@ -7,13 +7,13 @@
 mockingbird доступен в двух вариантах
 - native приложение
 
-`mockingbird-native`
+`ghcr.io/tinkoff/mockingbird:<TAG>-native`
 
 Рекомендуемый образ для большинства случаев. Представляет собой скомпилированное в native-image с помощью GraalVM Scala приложение
 
 - образ на классической JVM
 
-`mockingbird`
+`ghcr.io/tinkoff/mockingbird:<TAG>`
 
 Рекомендуется только в случае необходимости использования mockingbird для нагрузочных тестов:
 в отличие от нативного требует больше памяти, но позволяет использовать G1GC, что полезно в high-throughput сценариях
