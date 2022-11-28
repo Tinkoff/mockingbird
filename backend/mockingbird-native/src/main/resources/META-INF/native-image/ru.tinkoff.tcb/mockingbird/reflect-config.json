@@ -2000,7 +2000,19 @@
       {
         "name" : "<init>",
         "parameterTypes" : []
+      },
+      {
+        "name" : "setCustomFields",
+        "parameterTypes" : [
+          "java.lang.String"
+        ]
       }
+    ]
+  },
+  {
+    "name" : "java.net.InetAddress",
+    "fields" : [
+      { "name" : "impl" }
     ]
   }
 ]
