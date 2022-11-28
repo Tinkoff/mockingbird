@@ -680,31 +680,3 @@ json-представляения генерируется декодер protob
   "callback": { .. } //Опционально
 }
 ```
-
-## Пример моков для решения по короткой заявке (автокредиты) для режима persistent
-
-```javascript
-{
-  "name": "Короткая заявка",
-  "service": "test",
-  "source": "ibm_autobroker_short",
-  "input": {
-    "mode": "xml"
-    "payload": "<Event> ... </Event>"
-  },
-  "seed": {
-    "integrationId": "%{randomString(20)}"
-  },
-  "persist": { //Будет создано новое состояние
-    "_appId": "${/Event/EventData/auraMallShortApplicationCreated/application/id}",
-    "stage": "${/Event/EventData/auraMallShortApplicationCreated/application/stageId}",
-    "_integrationId": "${seed.integrationId}"
-  },
-  "destination": "ibm_autobroker_decision",
-  "output": {
-    "mode": "xml",
-    "payload": "<Event>..</Event>", //Здесь потребуется шаблонизатор XML
-    "delay": "1 second"
-  }
-}
-```
