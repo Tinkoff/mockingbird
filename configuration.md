@@ -100,3 +100,35 @@ Mockingbird конфигурируется посредством файла sec
 - auth - (опционально) параметры авторизации
 
 Можно указывать как домены, так и маски: "localhost", "*.local", "127.*"
+
+### Custom Fields в JSON логах
+
+Необходимо описать свой `logback.xml` файл и передать его в приложение через VM Options как `-Dlogback.configurationFile=...`.
+
+Пример конфигурации со своими полями, в значении `customFields` можно использовать интерполяцию переменных окружения:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration scan="true">
+
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <charset>UTF-8</charset>
+            <layout class="tofu.logging.ELKLayout">
+                <customFields>{"env":"${ENV}","inst":"${HOSTNAME}","system":"mockingbird"}</customFields>
+            </layout>
+        </encoder>
+    </appender>
+
+    <logger name="ru.tinkoff.tcb" level="${log.level:-DEBUG}" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+</configuration>
+```
