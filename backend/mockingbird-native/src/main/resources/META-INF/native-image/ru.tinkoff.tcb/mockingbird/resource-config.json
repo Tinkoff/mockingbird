@@ -8,29 +8,8 @@
       "pattern":"\\QMETA-INF/native/libnetty_transport_native_kqueue_x86_64.jnilib\\E"
     },
     {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/favicon-32x32.png\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/index.css\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/index.html\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/swagger-initializer.js\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/swagger-ui-bundle.js\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/swagger-ui-standalone-preset.js\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/4.11.1/swagger-ui.css\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/services/io.grpc.ServerProvider\\E"
-    }, 
+      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/.*?\\E"
+    },
     {
       "pattern":"\\Qapplication.conf\\E"
     }, 
@@ -81,24 +60,9 @@
     }, 
     {
       "pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
-    }, 
+    },
     {
-      "pattern":"\\Qout/assets/mainDefault.964ac0b80a00726e.chunk.js\\E"
-    }, 
-    {
-      "pattern":"\\Qout/assets/mainDefault.ec79d799eb2517ed.chunk.css\\E"
-    }, 
-    {
-      "pattern":"\\Qout/assets/platform.99816d2b46862a09.js\\E"
-    }, 
-    {
-      "pattern":"\\Qout/assets/platform.eb1d6532780655b7.css\\E"
-    }, 
-    {
-      "pattern":"\\Qout/assets/vendor.3cb5f6e7a1451628.js\\E"
-    }, 
-    {
-      "pattern":"\\Qout/index.html\\E"
+      "pattern":"\\Qout/.*?\\E"
     }, 
     {
       "pattern":"\\Qru/tinkoff/tcb/logging/MDCLogging.class\\E"

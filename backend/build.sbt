@@ -144,7 +144,6 @@ lazy val `mockingbird-native` = (project in file("mockingbird-native"))
     GraalVMNativeImage / graalVMNativeImageOptions ++= Seq("-H:+StaticExecutableWithDynamicLibC").filter(_ =>
       dockerize.value
     ),
-    GraalVMNativeImage / graalVMNativeImageOptions += "-H:IncludeResources=.*",
     nativeImageInstalled := true,
     nativeImageAgentMerge := true,
     run / javaOptions += "-Dconfig.resource=local.conf",
