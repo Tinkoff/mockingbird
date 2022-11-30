@@ -2,17 +2,8 @@
   "resources":{
   "includes":[
     {
-      "pattern":"\\QMETA-INF/maven/org.webjars/swagger-ui/pom.properties\\E"
-    }, 
-    {
-      "pattern":"\\QMETA-INF/native/libnetty_transport_native_kqueue_x86_64.jnilib\\E"
+      "pattern": "(?!.*(\\.class)).*"
     },
-    {
-      "pattern":"\\QMETA-INF/resources/webjars/swagger-ui/.*?\\E"
-    },
-    {
-      "pattern":"\\Qapplication.conf\\E"
-    }, 
     {
       "pattern":"\\Qcats/data/Chain$.class\\E"
     }, 
@@ -42,28 +33,10 @@
     }, 
     {
       "pattern":"\\Qfs2/internal/FreeC$.class\\E"
-    }, 
-    {
-      "pattern":"\\Qlibrary.properties\\E"
     },
-    {
-      "pattern":"\\Qlogback.xml\\E"
-    }, 
-    {
-      "pattern":"\\QmimeByExtensions.txt\\E"
-    }, 
-    {
-      "pattern":"\\Qorg/asynchttpclient/config/ahc-default.properties\\E"
-    }, 
-    {
-      "pattern":"\\Qorg/asynchttpclient/config/ahc-version.properties\\E"
-    }, 
     {
       "pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
     },
-    {
-      "pattern":"\\Qout/.*?\\E"
-    }, 
     {
       "pattern":"\\Qru/tinkoff/tcb/logging/MDCLogging.class\\E"
     }, 
@@ -357,6 +330,38 @@
     }, 
     {
       "pattern":"\\Qzio/stream/ZStreamPlatformSpecificConstructors.class\\E"
+    }
+  ],
+  "excludes": [
+    {
+      "pattern": "org/graalvm/.*"
+    },
+    {
+      "pattern": "META-INF/native-image/com.oracle.svm/.*"
+    },
+    {
+      "pattern": "META-INF/native-image/org.graalvm.polyglot/.*"
+    },
+    {
+      "pattern": "META-INF/native-image/org.graalvm.home/.*"
+    },
+    {
+      "pattern": "sun/.*"
+    },
+    {
+      "pattern": "com/sun/.*"
+    },
+    {
+      "pattern": "javax/.*"
+    },
+    {
+      "pattern": "jdk/.*"
+    },
+    {
+      "pattern": "com/oracle/.*"
+    },
+    {
+      "pattern": "scala/tools/.*"
     }
   ]},
   "bundles":[{
