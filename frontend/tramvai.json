@@ -13,6 +13,7 @@
           },
           "configurations": {
             "sourceMap": true,
+            "dedupeIgnore": ["@platform-ui/"],
             "postcss": {
               "config": "src/mockingbird/postcss"
             }
