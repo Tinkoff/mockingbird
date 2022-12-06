@@ -76,6 +76,7 @@ val mockingbird = (project in file("mockingbird"))
       "com.github.geirolz"            %% "advxml-core"         % "2.5.1",
       "com.github.geirolz"            %% "advxml-xpath"        % "2.5.1",
       "io.estatico"                   %% "newtype"             % "0.4.4",
+      "org.mozilla"                    % "rhino"                         % "1.7.14",
       "org.slf4j"                      % "slf4j-api"           % "1.7.30" % Provided
     ),
     Compile / unmanagedResourceDirectories += file("../frontend/dist")
