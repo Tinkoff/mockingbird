@@ -8,13 +8,15 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.Scriptable
 
-class SafeContextFactory(maxRunTime: Option[FiniteDuration], maxInstructions: Option[Long]) extends ContextFactory {
+class SafeContextFactory(maxRunTime: Option[FiniteDuration], maxInstructions: Option[Long], allowedClasses: List[String])
+    extends ContextFactory {
   override def makeContext(): Context =
     new CounterContext(this).tap { cc =>
       cc.setLanguageVersion(Context.VERSION_ES6)
       cc.setOptimizationLevel(-1)
       cc.setInstructionObserverThreshold(CounterContext.InstructionSteps)
-      cc.setClassShutter(SafeClassShutter)
+      cc.setClassShutter(new SafeClassShutter(allowedClasses.to(Set)))
+      cc.setWrapFactory(SandboxWrapFactory)
     }
 
   override def hasFeature(cx: Context, featureIndex: RuntimeFlags): Boolean = featureIndex match {
