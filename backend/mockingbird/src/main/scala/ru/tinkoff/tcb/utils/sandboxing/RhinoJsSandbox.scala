@@ -6,14 +6,18 @@ import scala.reflect.classTag
 
 import org.mozilla.javascript.Context
 
-class RhinoJsSandbox(maxRunTime: Option[FiniteDuration] = None, maxInstructions: Option[Long] = None) {
-  private val contextFactory = new SafeContextFactory(maxRunTime, maxInstructions)
+class RhinoJsSandbox(
+    maxRunTime: Option[FiniteDuration] = None,
+    maxInstructions: Option[Long] = None,
+    allowedClasses: List[String] = Nil
+) {
+  private val contextFactory = new SafeContextFactory(maxRunTime, maxInstructions, allowedClasses)
 
   def eval[T: ClassTag](code: String, environment: Map[String, Any] = Map.empty): T = {
     val ctx = contextFactory.enterContext()
 
     try {
-      val scope = ctx.initSafeStandardObjects()
+      val scope = ctx.initStandardObjects()
       for ((key, value) <- environment)
         scope.put(key, scope, Context.javaToJS(value, scope, ctx))
 
