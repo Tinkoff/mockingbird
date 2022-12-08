@@ -7,52 +7,52 @@ import scala.jdk.CollectionConverters.*
 
 import io.circe.Json
 import io.circe.syntax.*
+import org.scalatest.TryValues
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
-import ru.tinkoff.tcb.utils.sandboxing.RhinoJsSandbox
+import ru.tinkoff.tcb.utils.sandboxing.ClassAccessRule
+import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 import ru.tinkoff.tcb.utils.transformation.json.js_eval.circe2js
 
-class JsEvalSpec extends AnyFunSuite with Matchers {
-  private val sandbox = new RhinoJsSandbox
+class JsEvalSpec extends AnyFunSuite with Matchers with TryValues {
+  private val sandbox = new GraalJsSandbox
 
   test("Simple expressions") {
     val data = Json.obj("a" := Json.obj("b" := 42, "c" := "test", "d" := 1 :: 2 :: Nil))
 
-    val res = sandbox.eval[Int]("req.a.b", Map("req" -> data.foldWith(circe2js)))
+    val res = sandbox.eval[JBD]("req.a.b", Map("req" -> data.foldWith(circe2js)))
 
-    res shouldBe 42
+    res.success.value shouldBe BigDecimal(42).bigDecimal
 
     val res2 = sandbox.eval[String]("req.a.c", Map("req" -> data.foldWith(circe2js)))
 
-    res2 shouldBe "test"
+    res2.success.value shouldBe "test"
 
     val res3 = sandbox.eval[JList[JBD]]("req.a.d", Map("req" -> data.foldWith(circe2js)))
 
-    res3.asScala should contain theSameElementsInOrderAs List(1, 2).map(JBD.valueOf(_))
+    res3.success.value.asScala should contain theSameElementsInOrderAs List(1, 2).map(JBD.valueOf(_))
 
-    val res4 = sandbox.eval[Int]("req.a.d[0]", Map("req" -> data.foldWith(circe2js)))
+    val res4 = sandbox.eval[JBD]("req.a.d[0]", Map("req" -> data.foldWith(circe2js)))
 
-    res4 shouldBe 1
+    res4.success.value shouldBe BigDecimal(1).bigDecimal
   }
 
   test("JS functions") {
-    val aesSandbox = new RhinoJsSandbox(
-      allowedClasses = List(
-        "java.security.MessageDigest",
-        "java.security.MessageDigest$Delegate$CloneableDelegate",
-        "java.lang.String",
-        "java.lang.Object"
-      )
+    val aesSandbox = new GraalJsSandbox(
+      classAccessRules = List(
+        ClassAccessRule.Exact("java.security.MessageDigest")
+      ) ::: GraalJsSandbox.DefaultAccess
     )
 
     val etalon = MessageDigest.getInstance("SHA-1").digest("abc".getBytes)
 
+    // https://stackoverflow.com/a/22861911/3819595
     val res = aesSandbox.eval[Array[Byte]](
       """var md = java.security.MessageDigest.getInstance("SHA-1");
-        |md.digest((new java.lang.String("abc")).getBytes());""".stripMargin
+        |md.digest('abc'.split('').map(c => c.charCodeAt(0)));""".stripMargin
     )
 
-    res shouldBe etalon
+    res.success.value shouldBe etalon
   }
 }
