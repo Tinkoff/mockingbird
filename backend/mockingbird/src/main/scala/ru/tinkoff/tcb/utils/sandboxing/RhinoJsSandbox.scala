@@ -8,10 +8,9 @@ import org.mozilla.javascript.Context
 
 class RhinoJsSandbox(
     maxRunTime: Option[FiniteDuration] = None,
-    maxInstructions: Option[Long] = None,
     allowedClasses: List[String] = Nil
 ) {
-  private val contextFactory = new SafeContextFactory(maxRunTime, maxInstructions, allowedClasses)
+  private val contextFactory = new SafeContextFactory(maxRunTime, allowedClasses)
 
   def eval[T: ClassTag](code: String, environment: Map[String, Any] = Map.empty): T = {
     val ctx = contextFactory.enterContext()

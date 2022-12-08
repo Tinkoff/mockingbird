@@ -32,14 +32,6 @@ class RhinoJsSandboxSpec extends AnyFunSuite with Matchers {
     }
   }
 
-  test("Instruction limit test") {
-    val limitedSandbox = new RhinoJsSandbox(maxInstructions = Some(100))
-
-    assertThrows[ScriptCPUAbuseException] {
-      limitedSandbox.eval[Int]("while (true) { }")
-    }
-  }
-
   test("Evaluations should not have shared data") {
     sandbox.eval[Unit]("a = 42;")
     assertThrows[EcmaError] {

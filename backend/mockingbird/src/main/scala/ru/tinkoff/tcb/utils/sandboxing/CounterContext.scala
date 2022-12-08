@@ -7,7 +7,6 @@ import org.mozilla.javascript.ContextFactory
 
 class CounterContext(factory: ContextFactory) extends Context(factory) {
   var deadline: Deadline = Deadline.now
-  var instructions: Long = 0
 }
 
 object CounterContext {
