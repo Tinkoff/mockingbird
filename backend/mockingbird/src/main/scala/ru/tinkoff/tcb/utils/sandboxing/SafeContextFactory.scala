@@ -8,8 +8,7 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.Scriptable
 
-class SafeContextFactory(maxRunTime: Option[FiniteDuration], maxInstructions: Option[Long], allowedClasses: List[String])
-    extends ContextFactory {
+class SafeContextFactory(maxRunTime: Option[FiniteDuration], allowedClasses: List[String]) extends ContextFactory {
   override def makeContext(): Context =
     new CounterContext(this).tap { cc =>
       cc.setLanguageVersion(Context.VERSION_ES6)
@@ -32,10 +31,6 @@ class SafeContextFactory(maxRunTime: Option[FiniteDuration], maxInstructions: Op
 
     if (counter.deadline.isOverdue())
       throw new ScriptDurationException
-
-    counter.instructions += CounterContext.InstructionSteps
-    if (maxInstructions.exists(_ <= counter.instructions))
-      throw new ScriptCPUAbuseException
   }
 
   override def doTopCall(
@@ -47,7 +42,6 @@ class SafeContextFactory(maxRunTime: Option[FiniteDuration], maxInstructions: Op
   ): AnyRef = {
     val counter = cx.asInstanceOf[CounterContext]
     counter.deadline = maxRunTime.fold(minute.fromNow)(fd => fd.fromNow)
-    counter.instructions = 0
     super.doTopCall(callable, cx, scope, thisObj, args)
   }
 
