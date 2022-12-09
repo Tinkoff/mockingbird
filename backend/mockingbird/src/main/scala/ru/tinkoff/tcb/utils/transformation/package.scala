@@ -11,6 +11,7 @@ import ru.tinkoff.tcb.utils.time.*
 package object transformation {
   val SubstRx: Regex = """\$\{(.*?)\}""".r
   val FunRx: Regex   = """%\{.*?\}""".r
+  val CodeRx: Regex  = """%\{(.*?)\}""".r
 
   val RandStr: Regex          = """%\{randomString\((\d+)\)\}""".r
   val RandAlphabetStr: Regex  = """%\{randomString\(\"(.*?)\",\s*(\d+),\s*(\d+)\)\}""".r
