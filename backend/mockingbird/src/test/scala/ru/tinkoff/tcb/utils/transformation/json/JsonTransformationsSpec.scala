@@ -13,6 +13,8 @@ import org.scalatest.matchers.should.Matchers
 import ru.tinkoff.tcb.utils.circe.*
 import ru.tinkoff.tcb.utils.circe.optics.JLens
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
+import ru.tinkoff.tcb.utils.resource.readStr
+import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 
 class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValues {
   test("Fill template") {
@@ -166,6 +168,60 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
     template.isTemplate shouldBe true
 
     val res = template.eval
+
+    (res \\ "a").headOption.flatMap(_.asString).value should have length 10
+
+    info((res \\ "ai").headOption.flatMap(_.asString).value)
+    (res \\ "ai").headOption.flatMap(_.asString).value should fullyMatch regex """[ABCDEF1234567890]{4,5}"""
+
+    val b = (res \\ "b").headOption.flatMap(_.asNumber).flatMap(_.toInt).value
+    b should be >= 0
+    b should be < 5
+
+    val bi = (res \\ "bi").headOption.flatMap(_.asNumber).flatMap(_.toInt).value
+    bi should be >= 3
+    bi should be < 8
+
+    val c = (res \\ "c").headOption.flatMap(_.asNumber).flatMap(_.toLong).value
+    c should be >= 0L
+    c should be < 5L
+
+    val ci = (res \\ "ci").headOption.flatMap(_.asNumber).flatMap(_.toLong).value
+    ci should be >= 3L
+    ci should be < 8L
+
+    val d = (res \\ "d").headOption.flatMap(_.asString).value
+    noException should be thrownBy UUID.fromString(d)
+
+    val e = (res \\ "e").headOption.flatMap(_.asString).value
+    noException should be thrownBy formatter.parse(e)
+
+    val f = (res \\ "f").headOption.flatMap(_.asString).value
+    noException should be thrownBy dFormatter.parse(f)
+  }
+
+  test("JavaScript eval") {
+    val datePattern = "yyyy-MM-dd"
+    val dFormatter  = DateTimeFormatter.ofPattern(datePattern)
+    val pattern     = "yyyy-MM-dd'T'HH:mm:ss"
+    val formatter   = DateTimeFormatter.ofPattern(pattern)
+
+    val prelude                          = readStr("prelude.js")
+    implicit val sandbox: GraalJsSandbox = new GraalJsSandbox(prelude = Option(prelude))
+
+    val template = Json.obj(
+      "a" := "%{randomString(10)}",
+      "ai" := "%{randomString(\"ABCDEF1234567890\", 4, 6)}",
+      "b" := "%{randomInt(5)}",
+      "bi" := "%{randomInt(3, 8)}",
+      "c" := "%{randomLong(5)}",
+      "ci" := "%{randomLong(3, 8)}",
+      "d" := "%{UUID()}",
+      "e" := s"%{now(\"$pattern\")}",
+      "f" := s"%{today('$datePattern')}"
+    )
+
+    val res = template.eval2
 
     (res \\ "a").headOption.flatMap(_.asString).value should have length 10
 
