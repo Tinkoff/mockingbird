@@ -1,7 +1,5 @@
 package ru.tinkoff.tcb.utils.transformation
 
-import java.lang as jl
-import java.math as jm
 import scala.util.Failure
 import scala.util.Success
 import scala.util.control.TailCalls
@@ -10,13 +8,13 @@ import scala.util.control.TailCalls.TailRec
 import io.circe.Json
 import io.circe.JsonNumber as JNumber
 import kantan.xpath.*
-import mouse.boolean.*
 
 import ru.tinkoff.tcb.utils.circe.*
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
 import ru.tinkoff.tcb.utils.json.json2StringFolder
 import ru.tinkoff.tcb.utils.regex.OneOrMore
 import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
+import ru.tinkoff.tcb.utils.transformation.json.js_eval.fold2Json
 import ru.tinkoff.tcb.utils.transformation.xml.nodeTemplater
 
 package object json {
@@ -91,39 +89,13 @@ package object json {
         }.result
       }
 
-    def eval: Json =
-      transformValues { case js @ JsonString(str) =>
-        str
-          .foldTemplate(
-            Json.fromString,
-            Json.fromInt,
-            Json.fromLong
-          )
-          .orElse {
-            FunRx
-              .findFirstIn(str)
-              .isDefined
-              .option(
-                FunRx
-                  .replaceSomeIn(str, m => m.matched.foldTemplate(identity, _.toString(), _.toString()))
-              )
-              .map(Json.fromString)
-          }
-          .getOrElse(js)
-      }.result
-
-    def eval2(implicit sandbox: GraalJsSandbox): Json =
-      transformValues {
-        case js @ JsonString(CodeRx(code)) =>
-          (sandbox.eval[AnyRef](code) match {
-            case Success(str: String)       => Option(Json.fromString(str))
-            case Success(bd: jm.BigDecimal) => Option(Json.fromBigDecimal(bd))
-            case Success(i: jl.Integer)     => Option(Json.fromInt(i.intValue()))
-            case Success(l: jl.Long)        => Option(Json.fromLong(l.longValue()))
-            case Success(other)             => throw new Exception(s"${other.getClass.getCanonicalName}: $other")
-            case Failure(exception)         => throw exception
-          }).getOrElse(js)
-        case JsonString(other) => throw new Exception(other)
+    def eval(implicit sandbox: GraalJsSandbox): Json =
+      transformValues { case js @ JsonString(CodeRx(code)) =>
+        (sandbox.eval[AnyRef](code) match {
+          case Success(value) if fold2Json.isDefinedAt(value) => Option(fold2Json(value))
+          case Success(other)     => throw new Exception(s"${other.getClass.getCanonicalName}: $other")
+          case Failure(exception) => throw exception
+        }).getOrElse(js)
       }.result
 
     def patch(values: Json, schema: Map[JsonOptic, String]): Json =

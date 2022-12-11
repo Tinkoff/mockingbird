@@ -11,12 +11,12 @@ import org.scalatest.TryValues
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
-import ru.tinkoff.tcb.utils.sandboxing.ClassAccessRule
+import ru.tinkoff.tcb.mockingbird.config.JsSandboxConfig
 import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 import ru.tinkoff.tcb.utils.transformation.json.js_eval.circe2js
 
 class JsEvalSpec extends AnyFunSuite with Matchers with TryValues {
-  private val sandbox = new GraalJsSandbox
+  private val sandbox = new GraalJsSandbox(JsSandboxConfig())
 
   test("Simple expressions") {
     val data = Json.obj("a" := Json.obj("b" := 42, "c" := "test", "d" := 1 :: 2 :: Nil))
@@ -39,11 +39,7 @@ class JsEvalSpec extends AnyFunSuite with Matchers with TryValues {
   }
 
   test("JS functions") {
-    val aesSandbox = new GraalJsSandbox(
-      classAccessRules = List(
-        ClassAccessRule.Exact("java.security.MessageDigest")
-      ) ::: GraalJsSandbox.DefaultAccess
-    )
+    val aesSandbox = new GraalJsSandbox(JsSandboxConfig(Set("java.security.MessageDigest")))
 
     val etalon = MessageDigest.getInstance("SHA-1").digest("abc".getBytes)
 

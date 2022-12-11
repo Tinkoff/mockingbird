@@ -41,6 +41,7 @@ import ru.tinkoff.tcb.mockingbird.scenario.CallbackEngine
 import ru.tinkoff.tcb.mockingbird.scenario.ScenarioEngine
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
 import ru.tinkoff.tcb.utils.regex.*
+import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 import ru.tinkoff.tcb.utils.transformation.json.*
 import ru.tinkoff.tcb.utils.transformation.string.*
 import ru.tinkoff.tcb.utils.transformation.xml.*
@@ -54,6 +55,7 @@ final class PublicApiHandler(
     stateDAO: PersistentStateDAO[Task],
     resolver: StubResolver,
     engine: CallbackEngine,
+    implicit val jsSandbox: GraalJsSandbox,
     private val httpBackend: SttpBackend[Task, ?],
     proxyConfig: ProxyConfig
 ) {
@@ -304,8 +306,9 @@ object PublicApiHandler {
       ssd        <- ZIO.service[PersistentStateDAO[Task]]
       resolver   <- ZIO.service[StubResolver]
       engine     <- ZIO.service[ScenarioEngine]
+      jsSandbox  <- ZIO.service[GraalJsSandbox]
       sttpClient <- ZIO.service[SttpBackend[Task, Any]]
       proxyCfg   <- ZIO.service[ProxyConfig]
-    } yield new PublicApiHandler(hsd, ssd, resolver, engine, sttpClient, proxyCfg)
+    } yield new PublicApiHandler(hsd, ssd, resolver, engine, jsSandbox, sttpClient, proxyCfg)
   }
 }

@@ -167,7 +167,7 @@ State аккумулятивно дописывается. Разрешено п
 * `%{now("yyyy-MM-dd'T'HH:mm:ss")}` - текущее время в заданном [формате](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)
 * `%{today("yyyy-MM-dd")}` - текущая дата в заданном [формате](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)
 
-Можно определять строки со сложным форматом: `%{randomInt(10)}: %{randomLong(10)} | %{randomString(12)}`, поддерживаются все псевдофункции из списка выше
+Можно определять строки со сложным форматом: `%{randomInt(10) +': ' + randomLong(10) + ' | '  + {randomString(12)}`, поддерживаются все псевдофункции из списка выше
 
 ## Резолвинг заглушек/сценариев
 

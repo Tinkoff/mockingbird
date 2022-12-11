@@ -7,22 +7,21 @@ import scala.util.Using
 
 import org.graalvm.polyglot.*
 
-import ru.tinkoff.tcb.utils.instances.predicate.or.*
+import ru.tinkoff.tcb.mockingbird.config.JsSandboxConfig
 
 class GraalJsSandbox(
-    classAccessRules: List[ClassAccessRule] = GraalJsSandbox.DefaultAccess,
+    jsSandboxConfig: JsSandboxConfig,
     prelude: Option[String] = None
 ) {
-  private val accessRule = classAccessRules.asInstanceOf[List[String => Boolean]].combineAll
-
-  private val preludeSource = prelude.map(Source.create("js", _))
+  private val allowedClasses = GraalJsSandbox.DefaultAccess ++ jsSandboxConfig.allowedClasses
+  private val preludeSource  = prelude.map(Source.create("js", _))
 
   def eval[T: ClassTag](code: String, environment: Map[String, Any] = Map.empty): Try[T] =
     Using(
       Context
         .newBuilder("js")
         .allowHostAccess(HostAccess.ALL)
-        .allowHostClassLookup((t: String) => accessRule(t))
+        .allowHostClassLookup((t: String) => allowedClasses(t))
         .option("engine.WarnInterpreterOnly", "false")
         .build()
     ) { context =>
@@ -36,24 +35,31 @@ class GraalJsSandbox(
 }
 
 object GraalJsSandbox {
-  val DefaultAccess: List[ClassAccessRule] = List(
-    ClassAccessRule.Exact("java.lang.Byte"),
-    ClassAccessRule.Exact("java.lang.Boolean"),
-    ClassAccessRule.Exact("java.lang.Double"),
-    ClassAccessRule.Exact("java.lang.Float"),
-    ClassAccessRule.Exact("java.lang.Integer"),
-    ClassAccessRule.Exact("java.lang.Long"),
-    ClassAccessRule.Exact("java.lang.Math"),
-    ClassAccessRule.Exact("java.lang.Short"),
-    ClassAccessRule.Exact("java.lang.String"),
-    ClassAccessRule.Exact("java.math.BigDecimal"),
-    ClassAccessRule.Exact("java.math.BigInteger"),
-    ClassAccessRule.Exact("java.time.LocalDate"),
-    ClassAccessRule.Exact("java.time.LocalDateTime"),
-    ClassAccessRule.Exact("java.time.format.DateTimeFormatter"),
-    ClassAccessRule.Exact("java.util.List"),
-    ClassAccessRule.Exact("java.util.Map"),
-    ClassAccessRule.Exact("java.util.Random"),
-    ClassAccessRule.Exact("java.util.Set")
+  val live: URLayer[Option[String] & JsSandboxConfig, GraalJsSandbox] = ZLayer {
+    for {
+      sandboxConfig <- ZIO.service[JsSandboxConfig]
+      prelude       <- ZIO.service[Option[String]]
+    } yield new GraalJsSandbox(sandboxConfig, prelude)
+  }
+
+  val DefaultAccess: Set[String] = Set(
+    "java.lang.Byte",
+    "java.lang.Boolean",
+    "java.lang.Double",
+    "java.lang.Float",
+    "java.lang.Integer",
+    "java.lang.Long",
+    "java.lang.Math",
+    "java.lang.Short",
+    "java.lang.String",
+    "java.math.BigDecimal",
+    "java.math.BigInteger",
+    "java.time.LocalDate",
+    "java.time.LocalDateTime",
+    "java.time.format.DateTimeFormatter",
+    "java.util.List",
+    "java.util.Map",
+    "java.util.Random",
+    "java.util.Set"
   )
 }

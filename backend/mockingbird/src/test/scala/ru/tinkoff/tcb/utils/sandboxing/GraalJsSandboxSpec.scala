@@ -5,8 +5,10 @@ import org.scalatest.TryValues
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
+import ru.tinkoff.tcb.mockingbird.config.JsSandboxConfig
+
 class GraalJsSandboxSpec extends AnyFunSuite with Matchers with TryValues {
-  private val sandbox = new GraalJsSandbox
+  private val sandbox = new GraalJsSandbox(new JsSandboxConfig())
 
   test("Eval simple arithmetics") {
     sandbox.eval[Int]("1 + 2").success.value shouldBe 3
