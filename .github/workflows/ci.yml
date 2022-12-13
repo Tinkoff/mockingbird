@@ -103,7 +103,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: layers.zip
-          asset_name: ${{ github.ref_name }}-layers.zip
+          asset_name: layers.zip
           tag: ${{ github.ref_name }}
         if: ${{ github.ref_type == 'tag' }}
 
