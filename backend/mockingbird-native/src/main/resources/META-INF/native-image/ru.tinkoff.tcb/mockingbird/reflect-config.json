@@ -240,6 +240,15 @@
     ]
   },
   {
+    "name" : "com.sun.org.apache.xpath.internal.functions.FuncNot",
+    "methods" : [
+      {
+        "name" : "<init>",
+        "parameterTypes" : []
+      }
+    ]
+  },
+  {
     "name" : "com.sun.org.apache.xpath.internal.functions.FuncNumber",
     "methods" : [
       {
