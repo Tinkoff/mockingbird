@@ -102,9 +102,9 @@ object Mockingbird extends scala.App {
           for {
             pc <- ZIO.service[ProxyConfig]
             scopedBackend <- AsyncHttpClientZioBackend.scoped(
-              SttpBackendOptions.Default
-                .copy(proxy =
-                  pc.proxyServer.map(psc =>
+              pc.proxyServer.fold(SttpBackendOptions.Default) { psc =>
+                SttpBackendOptions.Default
+                  .copy(proxy =
                     SttpBackendOptions
                       .Proxy(
                         psc.host,
@@ -117,8 +117,9 @@ object Mockingbird extends scala.App {
                         psc.auth.map(psa => SttpBackendOptions.ProxyAuth(psa.user, psa.password)),
                         psc.onlyProxy.to(List)
                       )
+                      .some
                   )
-                )
+              }
             )
           } yield scopedBackend
         },
