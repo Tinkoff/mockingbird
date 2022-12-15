@@ -53,7 +53,8 @@ val mockingbird = (project in file("mockingbird"))
       Dependencies.zio,
       Dependencies.refined,
       Dependencies.protobuf,
-      Dependencies.tapirBase
+      Dependencies.tapirBase,
+      Dependencies.glass
     ).flatten,
     libraryDependencies ++= Seq(
       "com.iheart"                    %% "ficus"                         % "1.5.0",

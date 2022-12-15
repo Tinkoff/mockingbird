@@ -25,8 +25,10 @@ import ru.tinkoff.tcb.mockingbird.model.DestinationConfiguration
 import ru.tinkoff.tcb.mockingbird.model.GrpcStub
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
 import ru.tinkoff.tcb.mockingbird.model.PersistentState
+import ru.tinkoff.tcb.mockingbird.model.RequestBody
 import ru.tinkoff.tcb.mockingbird.model.Scenario
 import ru.tinkoff.tcb.mockingbird.model.Service
+import ru.tinkoff.tcb.mockingbird.model.SimpleRequestBody
 import ru.tinkoff.tcb.mockingbird.model.SourceConfiguration
 import ru.tinkoff.tcb.utils.id.SID
 
@@ -64,7 +66,10 @@ package object admin {
   ], Any] =
     tryStub
       .in(execInput)
-      .in(binaryBody(RawBodyType.ByteArrayBody)[String])
+      .in(
+        binaryBody(RawBodyType.ByteArrayBody)[String]
+          .map[RequestBody](SimpleRequestBody(_))(SimpleRequestBody.subset.getOption(_).get.value)
+      )
       .out(jsonBody[SID[HttpStub]])
 
   val tryGet: PublicEndpoint[ExecInput, Throwable, SID[HttpStub], Any] =

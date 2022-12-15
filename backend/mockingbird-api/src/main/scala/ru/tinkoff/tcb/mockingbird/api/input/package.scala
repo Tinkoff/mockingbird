@@ -6,10 +6,11 @@ import sttp.model.QueryParams
 import sttp.tapir.*
 
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
+import ru.tinkoff.tcb.mockingbird.model.RequestBody
 
 package object input {
   private[api] type ExecInput  = (HttpMethod, String, Map[String, String], Map[String, String])
-  private[api] type ExecInputB = (HttpMethod, String, Map[String, String], Map[String, String], String)
+  private[api] type ExecInputB = (HttpMethod, String, Map[String, String], Map[String, String], RequestBody)
 
   private[api] val execInput: EndpointInput[ExecInput] =
     extractFromRequest(_.method)

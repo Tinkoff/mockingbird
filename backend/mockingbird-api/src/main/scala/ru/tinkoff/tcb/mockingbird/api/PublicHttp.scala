@@ -8,10 +8,10 @@ import sttp.tapir.server.vertx.zio.VertxZioServerOptions
 import sttp.tapir.swagger.SwaggerUIOptions
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import sttp.tapir.ztapir.*
-import zio.Duration
 
 import ru.tinkoff.tcb.mockingbird.api.exec.*
 import ru.tinkoff.tcb.mockingbird.build.BuildInfo
+import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.model.BinaryResponse
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
 import ru.tinkoff.tcb.mockingbird.model.HttpStubResponse
@@ -19,20 +19,24 @@ import ru.tinkoff.tcb.mockingbird.model.JsonProxyResponse
 import ru.tinkoff.tcb.mockingbird.model.JsonResponse
 import ru.tinkoff.tcb.mockingbird.model.ProxyResponse
 import ru.tinkoff.tcb.mockingbird.model.RawResponse
+import ru.tinkoff.tcb.mockingbird.model.RequestBody
 import ru.tinkoff.tcb.mockingbird.model.XmlProxyResponse
 import ru.tinkoff.tcb.mockingbird.model.XmlResponse
 import ru.tinkoff.tcb.mockingbird.wldRuntime
 
 final class PublicHttp(handler: PublicApiHandler) {
-  private val endpointsWithoutBody = List(getEndpoint, headEndpoint, optionsEndpoint, deleteEndpoint)
-  private val endpointsWithBody    = List(postEndpoint, putEndpoint, patchEndpoint)
+  private val endpointsWithoutBody   = List(getEndpoint, headEndpoint, optionsEndpoint, deleteEndpoint)
+  private val endpointsWithBody      = List(postEndpoint, putEndpoint, patchEndpoint)
+  private val endpointsWithMultipart = List(postMultipartEndpoint, putMultipartEndpoint, patchMultipartEndpoint)
 
   private val withoutBody =
     endpointsWithoutBody
-      .map(_.zServerLogic[WLD]((handle(_, _, _, _, "")).tupled))
+      .map(_.zServerLogic[WLD]((handle(_, _, _, _, AbsentRequestBody)).tupled))
   private val withBody =
     endpointsWithBody
       .map(_.zServerLogic[WLD]((handle _).tupled))
+  private val withMultipart =
+    endpointsWithMultipart.map(_.zServerLogic[WLD]((handle _).tupled))
 
   private val swaggerEndpoints =
     SwaggerInterpreter(
@@ -42,20 +46,25 @@ final class PublicHttp(handler: PublicApiHandler) {
         Nil,
         useRelativePaths = false
       )
-    ).fromEndpoints[RIO[WLD, *]](endpointsWithoutBody ++ endpointsWithBody, "Mockingbird", BuildInfo.version)
+    ).fromEndpoints[RIO[WLD, *]](
+      endpointsWithoutBody ++ endpointsWithBody ++ endpointsWithMultipart,
+      "Mockingbird",
+      BuildInfo.version
+    )
 
   private val options =
     VertxZioServerOptions.customiseInterceptors[WLD].unsupportedMediaTypeInterceptor(None).options
 
   val http: List[Router => Route] =
-    (withoutBody ++ withBody ++ swaggerEndpoints).map(VertxZioServerInterpreter(options).route(_)(wldRuntime))
+    (withoutBody ++ withBody ++ withMultipart ++ swaggerEndpoints)
+      .map(VertxZioServerInterpreter(options).route(_)(wldRuntime))
 
   private def handle(
       method: HttpMethod,
       path: String,
       headers: Map[String, String],
       query: Map[String, String],
-      body: String
+      body: RequestBody
   ): ZIO[WLD, Throwable, (List[Header], HttpStubResponse)] =
     handler
       .exec(method, path, headers, query, body)
