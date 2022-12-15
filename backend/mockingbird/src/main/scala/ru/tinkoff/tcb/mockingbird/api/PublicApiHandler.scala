@@ -22,16 +22,20 @@ import ru.tinkoff.tcb.mockingbird.dal.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.dal.PersistentStateDAO
 import ru.tinkoff.tcb.mockingbird.error.*
 import ru.tinkoff.tcb.mockingbird.misc.Renderable.ops.*
+import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.model.BinaryResponse
 import ru.tinkoff.tcb.mockingbird.model.ByteArray
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
 import ru.tinkoff.tcb.mockingbird.model.HttpStubResponse
 import ru.tinkoff.tcb.mockingbird.model.JsonProxyResponse
+import ru.tinkoff.tcb.mockingbird.model.MultipartRequestBody
 import ru.tinkoff.tcb.mockingbird.model.PersistentState
 import ru.tinkoff.tcb.mockingbird.model.ProxyResponse
 import ru.tinkoff.tcb.mockingbird.model.RawResponse
+import ru.tinkoff.tcb.mockingbird.model.RequestBody
 import ru.tinkoff.tcb.mockingbird.model.Scope
+import ru.tinkoff.tcb.mockingbird.model.SimpleRequestBody
 import ru.tinkoff.tcb.mockingbird.model.XmlProxyResponse
 import ru.tinkoff.tcb.mockingbird.scenario.CallbackEngine
 import ru.tinkoff.tcb.mockingbird.scenario.ScenarioEngine
@@ -60,7 +64,7 @@ final class PublicApiHandler(
       path: String,
       headers: Map[String, String],
       query: Map[String, String],
-      body: String
+      body: RequestBody
   ): RIO[WLD, HttpStubResponse] = {
     val queryObject = Json.fromFields(query.view.mapValues(s => parse(s).getOrElse(Json.fromString(s))))
     val f           = resolver.findStubAndState(method, path, headers, queryObject, body) _
@@ -72,6 +76,7 @@ final class PublicApiHandler(
         .someOrFail(StubSearchError(s"Не удалось подобрать заглушку для [$method] $path"))
       _ <- Tracing.update(_.addToPayload("name" -> stub.name))
       seed     = stub.seed.map(_.eval)
+      srb      = SimpleRequestBody.subset.getOption(body).map(_.value)
       bodyJson = stub.request.extractJson(body)
       bodyXml  = stub.request.extractXML(body)
       groups = for {
@@ -102,7 +107,14 @@ final class PublicApiHandler(
         case JsonProxyResponse(uri, patch, delay, timeout) =>
           jsonProxyRequest(method, headers, query, body, data)(uri.substitute(data), patch, delay, timeout)
         case XmlProxyResponse(uri, patch, delay, timeout) =>
-          xmlProxyRequest(method, headers, query, body, data, SafeXML.loadString(body))(
+          xmlProxyRequest(
+            method,
+            headers,
+            query,
+            body,
+            data,
+            srb.map(SafeXML.loadString).getOrElse(scala.xml.Comment("No data"))
+          )(
             uri.substitute(data),
             patch,
             delay,
@@ -134,13 +146,27 @@ final class PublicApiHandler(
       method: HttpMethod,
       headers: Map[String, String],
       query: Map[String, String],
-      body: String
+      body: RequestBody
   )(uri: String, delay: Option[FiniteDuration], timeout: Option[FiniteDuration]): RIO[WLD, HttpStubResponse] = {
     val requestUri = uri"$uri".pipe(query.foldLeft(_) { case (u, (key, value)) => u.addParam(key, value) })
     log.debug(s"Received headers: ${headers.keys.mkString(", ")}") *> basicRequest
       .headers(headers -- proxyConfig.excludedRequestHeaders)
       .method(Method(method.entryName), requestUri)
-      .body(body)
+      .pipe(rt =>
+        body match {
+          case AbsentRequestBody        => rt
+          case SimpleRequestBody(value) => rt.body(value)
+          case MultipartRequestBody(value) =>
+            rt.multipartBody[Any](
+              value.map(part =>
+                multipart(part.name, part.body)
+                  .pipe(newPart =>
+                    part.headers.foldLeft(newPart) { case (acc, header) => acc.header(header.name, header.value, true) }
+                  )
+              )
+            )
+        }
+      )
       .response(asByteArrayAlways)
       .readTimeout(timeout.getOrElse(1.minute.asScala))
       .send(httpBackend)
@@ -158,7 +184,7 @@ final class PublicApiHandler(
       method: HttpMethod,
       headers: Map[String, String],
       query: Map[String, String],
-      body: String,
+      body: RequestBody,
       data: Json
   )(
       uri: String,
@@ -172,7 +198,21 @@ final class PublicApiHandler(
     log.debug(s"Received headers: ${headers.keys.mkString(", ")}") *> basicRequest
       .headers(headers -- proxyConfig.excludedRequestHeaders)
       .method(Method(method.entryName), requestUri)
-      .body(body)
+      .pipe(rt =>
+        body match {
+          case AbsentRequestBody        => rt
+          case SimpleRequestBody(value) => rt.body(value)
+          case MultipartRequestBody(value) =>
+            rt.multipartBody[Any](
+              value.map(part =>
+                multipart(part.name, part.body)
+                  .pipe(newPart =>
+                    part.headers.foldLeft(newPart) { case (acc, header) => acc.header(header.name, header.value, true) }
+                  )
+              )
+            )
+        }
+      )
       .response(asJsonAlways[Json])
       .readTimeout(timeout.getOrElse(1.minute.asScala))
       .send(httpBackend)
@@ -198,7 +238,7 @@ final class PublicApiHandler(
       method: HttpMethod,
       headers: Map[String, String],
       query: Map[String, String],
-      body: String,
+      body: RequestBody,
       jData: Json,
       xData: Node
   )(
@@ -213,7 +253,21 @@ final class PublicApiHandler(
     log.debug(s"Received headers: ${headers.keys.mkString(", ")}") *> basicRequest
       .headers(headers -- proxyConfig.excludedRequestHeaders)
       .method(Method(method.entryName), requestUri)
-      .body(body)
+      .pipe(rt =>
+        body match {
+          case AbsentRequestBody        => rt
+          case SimpleRequestBody(value) => rt.body(value)
+          case MultipartRequestBody(value) =>
+            rt.multipartBody[Any](
+              value.map(part =>
+                multipart(part.name, part.body)
+                  .pipe(newPart =>
+                    part.headers.foldLeft(newPart) { case (acc, header) => acc.header(header.name, header.value, true) }
+                  )
+              )
+            )
+        }
+      )
       .response(asXML)
       .readTimeout(timeout.getOrElse(1.minute.asScala))
       .send(httpBackend)

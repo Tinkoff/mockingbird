@@ -11,6 +11,7 @@ import sttp.tapir.ztapir.*
 import ru.tinkoff.tcb.mockingbird.api.admin.*
 import ru.tinkoff.tcb.mockingbird.build.BuildInfo
 import ru.tinkoff.tcb.mockingbird.config.ServerConfig
+import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.wldRuntime
 
 final class AdminHttp(config: ServerConfig, handler: AdminApiHandler) {
@@ -84,13 +85,13 @@ final class AdminHttp(config: ServerConfig, handler: AdminApiHandler) {
     createDestinationConf.zServerLogic(handler.createDestinationConfiguration),
     getDestinationConfiguration.zServerLogic(handler.getDestinationConfiguration),
     updateDestinationConf.zServerLogic((handler.updateDestinationConfiguration _).tupled),
-    tryGet.zServerLogic((handler.tryResolveStub(_, _, _, _, "")).tupled),
+    tryGet.zServerLogic((handler.tryResolveStub(_, _, _, _, AbsentRequestBody)).tupled),
     tryPost.zServerLogic((handler.tryResolveStub _).tupled),
     tryPatch.zServerLogic((handler.tryResolveStub _).tupled),
     tryPut.zServerLogic((handler.tryResolveStub _).tupled),
     tryDelete.zServerLogic((handler.tryResolveStub _).tupled),
-    tryHead.zServerLogic((handler.tryResolveStub(_, _, _, _, "")).tupled),
-    tryOptions.zServerLogic((handler.tryResolveStub(_, _, _, _, "")).tupled),
+    tryHead.zServerLogic((handler.tryResolveStub(_, _, _, _, AbsentRequestBody)).tupled),
+    tryOptions.zServerLogic((handler.tryResolveStub(_, _, _, _, AbsentRequestBody)).tupled),
     tryScenario.zServerLogic(handler.tryResolveScenario)
   )
 

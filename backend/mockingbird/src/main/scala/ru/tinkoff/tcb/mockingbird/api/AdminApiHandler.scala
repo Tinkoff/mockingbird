@@ -35,6 +35,7 @@ import ru.tinkoff.tcb.mockingbird.model.HttpMethod
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
 import ru.tinkoff.tcb.mockingbird.model.Label
 import ru.tinkoff.tcb.mockingbird.model.PersistentState
+import ru.tinkoff.tcb.mockingbird.model.RequestBody
 import ru.tinkoff.tcb.mockingbird.model.Scenario
 import ru.tinkoff.tcb.mockingbird.model.Scope
 import ru.tinkoff.tcb.mockingbird.model.Service
@@ -189,7 +190,7 @@ final class AdminApiHandler(
       path: String,
       headers: Map[String, String],
       query: Map[String, String],
-      body: String
+      body: RequestBody
   ): RIO[WLD, SID[HttpStub]] = {
     val queryObject = Json.fromFields(query.view.mapValues(s => parse(s).getOrElse(Json.fromString(s))))
     val f           = stubResolver.findStubAndState(method, path, headers, queryObject, body) _

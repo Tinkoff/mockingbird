@@ -18,6 +18,7 @@ import ru.tinkoff.tcb.mockingbird.misc.Renderable.ops.*
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
 import ru.tinkoff.tcb.mockingbird.model.PersistentState
+import ru.tinkoff.tcb.mockingbird.model.RequestBody
 import ru.tinkoff.tcb.mockingbird.model.Scope
 import ru.tinkoff.tcb.predicatedsl.Keyword
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
@@ -33,7 +34,7 @@ final class StubResolver(stubDAO: HttpStubDAO[Task], stateDAO: PersistentStateDA
       path: String,
       headers: Map[String, String],
       queryObject: Json,
-      body: String
+      body: RequestBody
   )(
       scope: Scope
   ): RIO[WLD, Option[(HttpStub, Option[PersistentState])]] =
@@ -72,7 +73,7 @@ final class StubResolver(stubDAO: HttpStubDAO[Task], stateDAO: PersistentStateDA
             ZIO.fail(EarlyReturn)
         )
         _ <- log.info("После проверки заголовков: {}", candidates2.map(_.id))
-        candidates3 = candidates2.filter(_.request.checkStringBody(body))
+        candidates3 = candidates2.filter(_.request.checkBody(body))
         _ <- ZIO.when(candidates3.isEmpty)(
           log.warn("После проверки тела запроса не осталось кандидатов, проверьте тело запроса: {}", body) *>
             ZIO.fail(EarlyReturn)

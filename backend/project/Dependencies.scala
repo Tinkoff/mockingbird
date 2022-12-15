@@ -85,4 +85,9 @@ object Dependencies {
     "io.micrometer"       % "micrometer-registry-prometheus" % Versions.micrometer,
     "io.github.mweirauch" % "micrometer-jvm-extras"          % "0.2.2"
   )
+
+  lazy val glass = Seq(
+    "glass-core",
+    "glass-macro",
+  ).map("tf.tofu" %% _ % Versions.glass)
 }
