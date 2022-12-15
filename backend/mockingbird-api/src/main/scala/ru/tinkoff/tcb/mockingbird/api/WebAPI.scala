@@ -5,6 +5,7 @@ import scala.jdk.CollectionConverters.*
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
+import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.CorsHandler
 import sttp.tapir.server.vertx.zio.VertxZioServerInterpreter.*
@@ -24,9 +25,10 @@ object WebAPI {
     ui           <- ZIO.service[UIHttp].toManaged
     metrics      <- ZIO.service[MetricsHttp].toManaged
     server <- ZManaged.acquireReleaseWith(ZIO.attempt {
-      val vertx  = Vertx.vertx()
-      val server = vertx.createHttpServer()
-      val router = Router.router(vertx)
+      val vertx         = Vertx.vertx()
+      val serverOptions = new HttpServerOptions().setMaxFormAttributeSize(256 * 1024)
+      val server        = vertx.createHttpServer(serverOptions)
+      val router        = Router.router(vertx)
       router
         .route()
         .path("/api/internal/mockingbird/v*")
