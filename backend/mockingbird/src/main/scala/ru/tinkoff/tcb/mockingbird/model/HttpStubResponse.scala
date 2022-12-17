@@ -7,14 +7,14 @@ import com.github.dwickern.macros.NameOf.*
 import derevo.circe.decoder
 import derevo.circe.encoder
 import derevo.derive
+import glass.Contains
+import glass.Property
+import glass.Subset
+import glass.macros.GenContains
+import glass.macros.GenSubset
 import io.circe.Json
 import sttp.tapir.derevo.schema
 import sttp.tapir.generic.Configuration as TapirConfig
-import tofu.optics.Contains
-import tofu.optics.Property
-import tofu.optics.Subset
-import tofu.optics.macros.GenContains
-import tofu.optics.macros.GenSubset
 
 import ru.tinkoff.tcb.bson.annotation.BsonDiscriminator
 import ru.tinkoff.tcb.bson.derivation.bsonDecoder

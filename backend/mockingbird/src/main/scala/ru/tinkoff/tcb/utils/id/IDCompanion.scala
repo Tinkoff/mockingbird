@@ -1,12 +1,12 @@
 package ru.tinkoff.tcb.utils.id
 
+import glass.Equivalent
 import io.circe.*
 import net.ceedubs.ficus.readers.ValueReader
 import shapeless.tag
 import shapeless.tag.@@
 import sttp.tapir.Schema
 import tofu.logging.Loggable
-import tofu.optics.Equivalent
 
 import ru.tinkoff.tcb.bson.*
 import ru.tinkoff.tcb.generic.PropSubset
