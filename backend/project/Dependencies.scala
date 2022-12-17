@@ -11,12 +11,10 @@ object Dependencies {
   ).map("com.softwaremill.sttp.tapir" %% _ % Versions.tapir)
 
   val tofu = Seq(
-    "tofu-optics-core",
-    "tofu-optics-macro",
     "tofu-logging",
     "tofu-logging-structured",
     "tofu-logging-derivation"
-  ).map("tf.tofu" %% _ % "0.10.8")
+  ).map("tf.tofu" %% _ % "0.11.1")
 
   val alleycats = Seq(
     "alleycats-core"
