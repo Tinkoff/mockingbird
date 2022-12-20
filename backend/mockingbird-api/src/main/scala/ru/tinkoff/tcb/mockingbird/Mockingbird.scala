@@ -5,7 +5,6 @@ import scalapb.zio_grpc.Server
 import scalapb.zio_grpc.ServerLayer
 import scalapb.zio_grpc.ServiceList
 import scalapb.zio_grpc.server.ZServerCallHandler
-
 import com.mongodb.ConnectionString
 import io.grpc.ServerBuilder
 import io.grpc.Status
@@ -18,7 +17,6 @@ import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import tofu.logging.Logging
 import tofu.logging.impl.ZUniversalLogging
 import zio.managed.*
-
 import ru.tinkoff.tcb.mockingbird.api.AdminApiHandler
 import ru.tinkoff.tcb.mockingbird.api.AdminHttp
 import ru.tinkoff.tcb.mockingbird.api.MetricsHttp
@@ -48,6 +46,8 @@ import ru.tinkoff.tcb.mockingbird.stream.EphemeralCleaner
 import ru.tinkoff.tcb.mockingbird.stream.EventSpawner
 import ru.tinkoff.tcb.mockingbird.stream.SDFetcher
 import ru.tinkoff.tcb.utils.metrics.makeRegistry
+import ru.tinkoff.tcb.utils.resource.readStr
+import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 
 object Mockingbird extends scala.App {
   type FL = WLD & ServerConfig & PublicHttp & EventSpawner & ResourceManager & EphemeralCleaner & GrpcRequestHandler
@@ -123,6 +123,7 @@ object Mockingbird extends scala.App {
             )
           } yield scopedBackend
         },
+        (ZLayer.service[ServerConfig].project(_.sandbox) ++ ZLayer.fromZIO(ZIO.attempt(readStr("prelude.js")).map(Option(_)))) >>> GraalJsSandbox.live,
         mongoLayer,
         aesEncoder,
         collection(_.stub) >>> HttpStubDAOImpl.live,
@@ -167,10 +168,12 @@ object Mockingbird extends scala.App {
           .exec(bytes)
           .provideSome[RequestContext](
             Tracing.live,
+            MockingbirdConfiguration.server,
             MockingbirdConfiguration.mongo,
             mongoLayer,
             collection(_.state) >>> PersistentStateDAOImpl.live,
             collection(_.grpcStub) >>> GrpcStubDAOImpl.live,
+            (ZLayer.service[ServerConfig].project(_.sandbox) ++ ZLayer.fromZIO(ZIO.attempt(readStr("prelude.js")).map(Option(_)))) >>> GraalJsSandbox.live,
             GrpcStubResolverImpl.live,
             GrpcRequestHandlerImpl.live
           )

@@ -8,7 +8,9 @@ import net.ceedubs.ficus.Ficus.*
 import net.ceedubs.ficus.readers.ArbitraryTypeReader.*
 import net.ceedubs.ficus.readers.EnumerationReader.*
 
-case class ServerConfig(interface: String, port: Int, allowedOrigins: Seq[String])
+case class JsSandboxConfig(allowedClasses: Set[String] = Set())
+
+case class ServerConfig(interface: String, port: Int, allowedOrigins: Seq[String], sandbox: JsSandboxConfig)
 
 case class SecurityConfig(secret: String)
 
