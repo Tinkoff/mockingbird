@@ -23,6 +23,7 @@ import ru.tinkoff.tcb.mockingbird.model.Scope
 import ru.tinkoff.tcb.predicatedsl.Keyword
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
 import ru.tinkoff.tcb.utils.id.SID
+import ru.tinkoff.tcb.utils.regex.*
 
 final class StubResolver(stubDAO: HttpStubDAO[Task], stateDAO: PersistentStateDAO[Task]) {
   private val log = MDCLogging.`for`[WLD](this)
@@ -82,7 +83,16 @@ final class StubResolver(stubDAO: HttpStubDAO[Task], stateDAO: PersistentStateDA
         candidates4 <- candidates3.traverse { stubc =>
           val bodyJson = stubc.request.extractJson(body)
           val bodyXml  = stubc.request.extractXML(body)
-          computeStateSpec(stubc.state.map(_.fill(Json.obj("__query" -> queryObject))), bodyJson, bodyXml)
+          val groups = for {
+            pattern <- stubc.pathPattern
+            mtch    <- pattern.findFirstMatchIn(path)
+          } yield pattern.groups.map(g => g -> mtch.group(g)).to(Map)
+          val segments = groups.map(segs => Json.fromFields(segs.view.mapValues(Json.fromString))).getOrElse(Json.Null)
+          computeStateSpec(
+            stubc.state.map(_.fill(Json.obj("__query" -> queryObject, "__segments" -> segments))),
+            bodyJson,
+            bodyXml
+          )
             .cata(
               spec => findStates(stubc.id, spec).map(stubc -> _),
               ZIO.succeed(stubc -> Vector.empty[PersistentState])
