@@ -226,7 +226,7 @@ HTTP заголовки валидируются на полное соотве�
 {
   "name": "Sample stub",
   "scope": "persistent",
-  "pathPattern": "/pattern/(?<id>\\d+)",
+  "pathPattern": "/pattern/(?<id>\d+)",
   "method": "GET",
   "request": {
     "headers": {},
