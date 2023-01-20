@@ -53,7 +53,7 @@ final class PublicHttp(handler: PublicApiHandler) {
     )
 
   private val options =
-    VertxZioServerOptions.customiseInterceptors[WLD].unsupportedMediaTypeInterceptor(None).options
+    VertxZioServerOptions.customiseInterceptors[WLD].notAcceptableInterceptor(None).options
 
   val http: List[Router => Route] =
     (withoutBody ++ withBody ++ withMultipart ++ swaggerEndpoints)
