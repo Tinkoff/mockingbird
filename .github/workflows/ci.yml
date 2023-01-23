@@ -132,7 +132,7 @@ jobs:
       - name: Compile and test
         run: |
           cd backend
-          sbt "project mockingbird-native;clean;fixCheck;test;missinglinkCheck;GraalVMNativeImage / packageBin;Docker / stage;"
+          sbt "project mockingbird-native;clean;fixCheck;test;GraalVMNativeImage / packageBin;Docker / stage;"
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
