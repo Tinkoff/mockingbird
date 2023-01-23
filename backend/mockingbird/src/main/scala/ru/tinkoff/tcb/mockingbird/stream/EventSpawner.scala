@@ -22,6 +22,7 @@ import ru.tinkoff.tcb.mockingbird.error.CompoundError
 import ru.tinkoff.tcb.mockingbird.error.EventProcessingError
 import ru.tinkoff.tcb.mockingbird.error.ScenarioExecError
 import ru.tinkoff.tcb.mockingbird.error.ScenarioSearchError
+import ru.tinkoff.tcb.mockingbird.error.SpawnError
 import ru.tinkoff.tcb.mockingbird.model.EventSourceRequest
 import ru.tinkoff.tcb.mockingbird.scenario.ScenarioEngine
 import ru.tinkoff.tcb.utils.circe.JsonString
@@ -97,7 +98,7 @@ final class EventSpawner(
           .validateParDiscard(_) { sourceConf =>
             (for {
               _   <- Tracing.init
-              res <- fetch(sourceConf.request)
+              res <- fetch(sourceConf.request).mapError(SpawnError(sourceConf.name, _))
               neRes = res.filter(_.nonEmpty)
               _ <- ZIO.when(neRes.nonEmpty)(log.info(s"Отправлено в обработку: ${neRes.length}"))
               _ <- ZIO
@@ -107,7 +108,7 @@ final class EventSpawner(
                 .mapError(CompoundError(_))
             } yield ())
               .catchSomeDefect { case NonFatal(ex) =>
-                ZIO.fail(ex)
+                ZIO.fail(SpawnError(sourceConf.name, ex))
               }
           }
           .mapError(CompoundError(_))
@@ -137,6 +138,8 @@ final class EventSpawner(
       log.warn(s"Ошибка при поиске сценария: $err")
     case CallbackError(err) =>
       log.warn(s"Ошибка при выполнении колбэка: $err")
+    case SpawnError(sid, err) =>
+      log.errorCause(s"Ошибка при получении события из {}", err, sid)
     case NonFatal(t) =>
       log.errorCause("Ошибка при получении события", t)
   }
