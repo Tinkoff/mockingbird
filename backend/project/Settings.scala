@@ -26,7 +26,7 @@ object Settings {
 
   val common = Seq(
     organization := "ru.tinkoff",
-    version := "3.4.1",
+    version := "3.5.0",
     scalaVersion := "2.13.10",
     Compile / packageDoc / publishArtifact := false,
     Compile / packageSrc / publishArtifact := false,
@@ -75,7 +75,6 @@ object Settings {
       // missinglink некорректно обрабатывает scope optional
       moduleFilter(organization = "org.mongodb", name = "mongodb-driver-core" | "mongodb-driver-reactivestreams"),
       moduleFilter(organization = "io.netty"),
-      moduleFilter(organization = "org.asynchttpclient", name = "async-http-client"),
       // там что-то ужасное, артефакт использует классы из зависимостей, которых нет в pom.xml
       moduleFilter(organization = "io.projectreactor", name = "reactor-core")
     ),
@@ -86,7 +85,8 @@ object Settings {
       // optional в vertx-core
       IgnoredPackage("com.fasterxml.jackson.databind"),
       IgnoredPackage("io.vertx.core.json.jackson"),
-      IgnoredPackage("io.netty.handler.codec.haproxy")
+      IgnoredPackage("io.netty.handler.codec.haproxy"),
+      IgnoredPackage("io.netty.channel.kqueue")
     ),
     dockerize := ciEnabled,
   )

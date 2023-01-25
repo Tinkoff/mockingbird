@@ -6,6 +6,9 @@ import scalapb.zio_grpc.ServerLayer
 import scalapb.zio_grpc.ServiceList
 import scalapb.zio_grpc.server.ZServerCallHandler
 
+import com.linecorp.armeria.client.ClientFactory
+import com.linecorp.armeria.client.WebClient
+import com.linecorp.armeria.client.encoding.DecodingClient
 import com.mongodb.ConnectionString
 import io.grpc.ServerBuilder
 import io.grpc.Status
@@ -14,7 +17,7 @@ import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.BsonDocument
 import sttp.client3.SttpBackendOptions
-import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
+import sttp.client3.armeria.zio.ArmeriaZioBackend
 import tofu.logging.Logging
 import tofu.logging.impl.ZUniversalLogging
 import zio.managed.*
@@ -101,26 +104,42 @@ object Mockingbird extends scala.App {
         ZLayer.scoped {
           for {
             pc <- ZIO.service[ProxyConfig]
-            scopedBackend <- AsyncHttpClientZioBackend.scoped(
-              pc.proxyServer.fold(SttpBackendOptions.Default) { psc =>
-                SttpBackendOptions.Default
-                  .copy(proxy =
-                    SttpBackendOptions
-                      .Proxy(
-                        psc.host,
-                        psc.port,
-                        (psc.`type`: @unchecked) match {
-                          case ProxyServerType.Http  => SttpBackendOptions.ProxyType.Http
-                          case ProxyServerType.Socks => SttpBackendOptions.ProxyType.Socks
-                        },
-                        psc.nonProxy.to(List),
-                        psc.auth.map(psa => SttpBackendOptions.ProxyAuth(psa.user, psa.password)),
-                        psc.onlyProxy.to(List)
-                      )
-                      .some
-                  )
-              }
-            )
+            sttpSettings = pc.proxyServer.fold(SttpBackendOptions.Default) { psc =>
+              SttpBackendOptions.Default
+                .copy(proxy =
+                  SttpBackendOptions
+                    .Proxy(
+                      psc.host,
+                      psc.port,
+                      (psc.`type`: @unchecked) match {
+                        case ProxyServerType.Http  => SttpBackendOptions.ProxyType.Http
+                        case ProxyServerType.Socks => SttpBackendOptions.ProxyType.Socks
+                      },
+                      psc.nonProxy.to(List),
+                      psc.auth.map(psa => SttpBackendOptions.ProxyAuth(psa.user, psa.password)),
+                      psc.onlyProxy.to(List)
+                    )
+                    .some
+                )
+            }
+            factory = ClientFactory
+              .builder()
+              .connectTimeoutMillis(sttpSettings.connectionTimeout.toMillis)
+              .pipe(b => sttpSettings.proxy.fold(b)(conf => b.proxyConfig(conf.asJavaProxySelector)))
+              .tlsNoVerifyHosts(pc.insecureHosts*)
+              .build()
+            webClient = WebClient
+              .builder()
+              .decorator(
+                DecodingClient
+                  .builder()
+                  .autoFillAcceptEncoding(false)
+                  .strictContentEncoding(true)
+                  .newDecorator()
+              )
+              .factory(factory)
+              .build()
+            scopedBackend <- ArmeriaZioBackend.scopedUsingClient(webClient)
           } yield scopedBackend
         },
         mongoLayer,

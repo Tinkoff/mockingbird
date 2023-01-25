@@ -28,12 +28,12 @@ object Dependencies {
   val catsTagless = Seq("org.typelevel" %% "cats-tagless-macros" % "0.12")
 
   val zio = Seq(
-    "dev.zio" %% "zio"                 % "2.0.0",
-    "dev.zio" %% "zio-managed"         % "2.0.0",
+    "dev.zio" %% "zio"                 % Versions.zio,
+    "dev.zio" %% "zio-managed"         % Versions.zio,
     "dev.zio" %% "zio-interop-cats"    % "22.0.0.0",
     "dev.zio" %% "zio-interop-twitter" % "21.2.0.2.1",
-    "dev.zio" %% "zio-test"            % "2.0.0" % Test,
-    "dev.zio" %% "zio-test-sbt"        % "2.0.0" % Test
+    "dev.zio" %% "zio-test"            % Versions.zio % Test,
+    "dev.zio" %% "zio-test-sbt"        % Versions.zio % Test
   )
 
   val json = Seq(

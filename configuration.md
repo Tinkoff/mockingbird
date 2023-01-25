@@ -21,6 +21,7 @@ Mockingbird конфигурируется посредством файла sec
     "proxy": {
       "excludedRequestHeaders": [..],
       "excludedResponseHeaders": [..],
+      "insecureHosts": [..],
       "proxyServer": {
         "type": "http" | "socks",
         "type": "..",
@@ -80,11 +81,17 @@ Mockingbird конфигурируется посредством файла sec
   "secrets": {
     "proxy": {
       "excludedRequestHeaders": ["Host", "HOST", "User-Agent", "user-agent"],
-      "excludedResponseHeaders": ["transfer-encoding"]
+      "excludedResponseHeaders": ["transfer-encoding"],
+      "insecureHosts": [
+        "some.host"
+      ]
     }
   }
 }
 ```
+
+В поле insecureHosts можно указать список хостов, для которых не будет выполняться проверка сертификатов. Это может быть полезно
+для случаев развёртывания во внутренней инфраструктуре
 
 Так-же в этой секции можно указать настройки прокси сервера. Эти настройки влияют на ВСЕ http запросы, которые делаем mockingbird, т.е.:
 - запросы к внешнему серверу с proxy моках
