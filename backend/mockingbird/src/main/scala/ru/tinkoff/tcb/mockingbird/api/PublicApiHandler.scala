@@ -161,7 +161,9 @@ final class PublicApiHandler(
               value.map(part =>
                 multipart(part.name, part.body)
                   .pipe(newPart =>
-                    part.headers.foldLeft(newPart) { case (acc, header) => acc.header(header.name, header.value, true) }
+                    part.headers.foldLeft(newPart) { case (acc, header) =>
+                      acc.header(header.name, header.value, true)
+                    }
                   )
               )
             )
@@ -173,7 +175,10 @@ final class PublicApiHandler(
       .map { response =>
         BinaryResponse(
           response.code.code,
-          response.headers.filterNot(h => proxyConfig.excludedResponseHeaders(h.name)).map(h => h.name -> h.value).toMap,
+          response.headers
+            .filterNot(h => proxyConfig.excludedResponseHeaders(h.name))
+            .map(h => h.name -> h.value)
+            .toMap,
           response.body.coerce[ByteArray],
           delay
         )

@@ -31,7 +31,8 @@ case class ProxyServerConfig(
 case class ProxyConfig(
     excludedRequestHeaders: Seq[String],
     excludedResponseHeaders: Set[String],
-    proxyServer: Option[ProxyServerConfig]
+    proxyServer: Option[ProxyServerConfig],
+    insecureHosts: Seq[String]
 )
 
 case class EventConfig(fetchInterval: FiniteDuration, reloadInterval: FiniteDuration)
