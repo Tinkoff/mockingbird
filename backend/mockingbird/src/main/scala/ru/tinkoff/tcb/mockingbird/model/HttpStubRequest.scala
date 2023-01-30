@@ -212,7 +212,8 @@ final case class RequestWithoutBody(
     query: Map[JsonOptic, Map[Keyword.Json, Json]] = Map.empty
 ) extends HttpStubRequest {
   override def checkBody(rBody: RequestBody): Boolean =
-    AbsentRequestBody.subset.getOption(rBody).isDefined
+    AbsentRequestBody.subset.getOption(rBody).isDefined ||
+      SimpleRequestBody.subset.getOption(rBody).exists(_.value.isEmpty)
 
   override def extractJson(rBody: RequestBody): Option[Json] = None
 
@@ -227,7 +228,7 @@ final case class RequestWithAnyBody(
     query: Map[JsonOptic, Map[Keyword.Json, Json]] = Map.empty
 ) extends HttpStubRequest {
   override def checkBody(rBody: RequestBody): Boolean =
-    AbsentRequestBody.subset.getOption(rBody).isEmpty
+    SimpleRequestBody.subset.getOption(rBody).exists(_.value.nonEmpty)
 
   override def extractJson(rBody: RequestBody): Option[Json] = None
 
