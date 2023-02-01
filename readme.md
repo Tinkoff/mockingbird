@@ -344,7 +344,7 @@ HTTP заголовки валидируются на полное соотве�
     "request": {
         "headers": {"Content-Type": "application/xml"},
         "mode": "raw"
-        "body": "<xml><request type=\"jopa\"></request></xml>"
+        "body": "<xml><request type=\"rqt\"></request></xml>"
     },
     "persist": {
       // Модификации состояния
@@ -352,7 +352,7 @@ HTTP заголовки валидируются на полное соотве�
     "response": {
         "code": 200,
         "mode": "raw"
-        "body": "<xml><response type=\"jopa\"></response></xml>",
+        "body": "<xml><response type=\"rqt\"></response></xml>",
         "headers": {"Content-Type": "application/xml"},
         "delay": "1 second"
     }
@@ -421,7 +421,7 @@ HTTP заголовки валидируются на полное соотве�
     "response": {
         "code": 200,
         "mode": "raw"
-        "body": "<xml><response type=\"jopa\"></response></xml>",
+        "body": "<xml><response type=\"rst\"></response></xml>",
         "headers": {"Content-Type": "application/xml"},
         "delay": "1 second"
     }
