@@ -44,7 +44,7 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
     val spec = Json.obj(
       "field1" := Json.obj("==" := "test"),
       "field2" := Json.obj("==" := 1 :: 2 :: 3 :: Nil),
-      "field3" := Json.obj("==" := Json.obj("yoba" := "peka"))
+      "field3" := Json.obj("==" := Json.obj("name" := "peka"))
     )
 
     val sut = JsonPredicate(spec.as[Map[JsonOptic, Map[Keyword.Json, Json]]].value).toOption
@@ -54,7 +54,7 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
         Json.obj(
           "field1" := "test",
           "field2" := 1 :: 2 :: 3 :: Nil,
-          "field3" := Json.obj("yoba" := "peka")
+          "field3" := Json.obj("name" := "peka")
         )
       )
     ) shouldBe Some(true)
@@ -64,7 +64,7 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
         Json.obj(
           "field1" := "peka",
           "field2" := 1 :: 2 :: 3 :: Nil,
-          "field3" := Json.obj("yoba" := "peka")
+          "field3" := Json.obj("name" := "peka")
         )
       )
     ) shouldBe Some(false)
@@ -74,7 +74,7 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
     val spec = Json.obj(
       "field1" := Json.obj("!=" := "test"),
       "field2" := Json.obj("==" := 1 :: 2 :: 3 :: Nil),
-      "field3" := Json.obj("==" := Json.obj("yoba" := "peka"))
+      "field3" := Json.obj("==" := Json.obj("name" := "peka"))
     )
 
     val sut = JsonPredicate(spec.as[Map[JsonOptic, Map[Keyword.Json, Json]]].value).toOption
@@ -82,9 +82,9 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
     sut.map(
       _(
         Json.obj(
-          "field1" := "yoba",
+          "field1" := "name",
           "field2" := 1 :: 2 :: 3 :: Nil,
-          "field3" := Json.obj("yoba" := "peka")
+          "field3" := Json.obj("name" := "peka")
         )
       )
     ) shouldBe Some(true)
@@ -94,7 +94,7 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
         Json.obj(
           "field1" := "test",
           "field2" := 1 :: 2 :: 3 :: Nil,
-          "field3" := Json.obj("yoba" := "peka")
+          "field3" := Json.obj("name" := "peka")
         )
       )
     ) shouldBe Some(false)

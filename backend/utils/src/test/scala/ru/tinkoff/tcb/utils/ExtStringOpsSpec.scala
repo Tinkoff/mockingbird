@@ -9,21 +9,21 @@ class ExtStringOpsSpec extends AnyFunSuite with Matchers {
   test("camel2Underscore") {
     "peka".camel2Underscore shouldBe "peka"
     "Peka".camel2Underscore shouldBe "peka"
-    "pekaYobaPshhh".camel2Underscore shouldBe "peka_yoba_pshhh"
-    "PekaYobaPshhh".camel2Underscore shouldBe "peka_yoba_pshhh"
+    "pekaNamePshhh".camel2Underscore shouldBe "peka_name_pshhh"
+    "PekaNamePshhh".camel2Underscore shouldBe "peka_name_pshhh"
   }
 
   test("underscore2Camel") {
     "peka".underscore2Camel shouldBe "peka"
     "Peka".underscore2Camel shouldBe "peka"
-    "peka_yoba_pshhh".underscore2Camel shouldBe "pekaYobaPshhh"
+    "peka_name_pshhh".underscore2Camel shouldBe "pekaNamePshhh"
     "PEKA".underscore2Camel shouldBe "peka"
   }
 
   test("underscore2UpperCamel") {
     "peka".underscore2UpperCamel shouldBe "Peka"
     "Peka".underscore2UpperCamel shouldBe "Peka"
-    "peka_yoba_pshhh".underscore2UpperCamel shouldBe "PekaYobaPshhh"
+    "peka_name_pshhh".underscore2UpperCamel shouldBe "PekaNamePshhh"
     "PEKA".underscore2UpperCamel shouldBe "Peka"
   }
 }

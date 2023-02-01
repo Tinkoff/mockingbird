@@ -61,9 +61,9 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
   test("Substitute object") {
     val template = Json.obj("value" := "${message}")
 
-    val sut = template.substitute(Json.obj("message" := Json.obj("peka" := "yoba")))
+    val sut = template.substitute(Json.obj("message" := Json.obj("peka" := "name")))
 
-    sut shouldBe Json.obj("value" := Json.obj("peka" := "yoba"))
+    sut shouldBe Json.obj("value" := Json.obj("peka" := "name"))
   }
 
   test("Convert to string") {
