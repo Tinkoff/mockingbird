@@ -11,6 +11,7 @@ import enumeratum.EnumEntry.Snakecase
 import enumeratum.values.StringCirceEnum
 import enumeratum.values.StringEnum
 import enumeratum.values.StringEnumEntry
+import sttp.tapir.Schema
 import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
 import sttp.tapir.derevo.schema
 import sttp.tapir.generic.Configuration as TapirConfig
@@ -95,12 +96,17 @@ object GrpcSchema {
     TapirConfig.default.withDiscriminator("type").copy(toEncodedName = modes)
 }
 
-@derive(encoder, decoder, bsonDecoder, bsonEncoder, schema)
+@derive(encoder, decoder, bsonDecoder, bsonEncoder)
 case class GrpcMessageSchema(
     name: String,
     fields: List[GrpcField],
-    oneofs: Option[List[GrpcOneOfSchema]] = None
+    oneofs: Option[List[GrpcOneOfSchema]] = None,
+    nested: Option[List[GrpcMessageSchema]] = None
 ) extends GrpcRootMessage
+
+object GrpcMessageSchema {
+  implicit lazy val gmsSchema: Schema[GrpcMessageSchema] = Schema.derived[GrpcMessageSchema]
+}
 
 @derive(encoder, decoder, bsonEncoder, bsonDecoder, schema)
 case class GrpcEnumSchema(
@@ -117,5 +123,6 @@ case class GrpcOneOfSchema(
 @derive(encoder, decoder, bsonDecoder, bsonEncoder, schema)
 case class GrpcProtoDefinition(
     name: String,
-    schemas: List[GrpcRootMessage]
+    schemas: List[GrpcRootMessage],
+    `package`: Option[String] = None
 )

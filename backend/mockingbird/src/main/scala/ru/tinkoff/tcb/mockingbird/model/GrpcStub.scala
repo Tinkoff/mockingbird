@@ -57,7 +57,7 @@ object GrpcStub {
       definition.schemas.find(_.name == className)
     )
     rootFields <- rootMessage match {
-      case GrpcMessageSchema(_, fields, oneofs) =>
+      case GrpcMessageSchema(_, fields, oneofs, _) =>
         ZIO.succeed(fields ++ oneofs.map(_.flatMap(_.options)).getOrElse(List.empty))
       case GrpcEnumSchema(_, _) => ZIO.fail(ValidationError(Vector("Enum cannot be a root message")))
     }
@@ -78,7 +78,7 @@ object GrpcStub {
               definition.schemas.find(_.name == field.typeName) match {
                 case Some(message) =>
                   message match {
-                    case GrpcMessageSchema(_, fs, oneofs) =>
+                    case GrpcMessageSchema(_, fs, oneofs, _) =>
                       fields.set(fs ++ oneofs.map(_.flatMap(_.options)).getOrElse(List.empty))
                     case GrpcEnumSchema(_, _) => fields.set(List.empty)
                   }
