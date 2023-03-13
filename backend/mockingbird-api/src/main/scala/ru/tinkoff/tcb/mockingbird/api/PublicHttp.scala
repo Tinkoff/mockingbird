@@ -72,9 +72,9 @@ final class PublicHttp(handler: PublicApiHandler) {
       .map {
         case r @ RawResponse(_, headers, _, _) =>
           (headers.map { case (name, value) => Header(name, value) }.to(List), r)
-        case j @ JsonResponse(_, headers, _, _) =>
+        case j @ JsonResponse(_, headers, _, _, _) =>
           (headers.map { case (name, value) => Header(name, value) }.to(List), j)
-        case x @ XmlResponse(_, headers, _, _) =>
+        case x @ XmlResponse(_, headers, _, _, _) =>
           (headers.map { case (name, value) => Header(name, value) }.to(List), x)
         case b @ BinaryResponse(_, headers, _, _) =>
           (headers.map { case (name, value) => Header(name, value) }.to(List), b)

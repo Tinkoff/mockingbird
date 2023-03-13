@@ -31,10 +31,10 @@ package object codec {
       override def format: CodecFormat.OctetStream = CodecFormat.OctetStream()
 
       override def encode(h: HttpStubResponse): Array[Byte] = h match {
-        case RawResponse(_, _, body, _)    => body.getBytes(StandardCharsets.UTF_8)
-        case JsonResponse(_, _, body, _)   => body.noSpaces.getBytes(StandardCharsets.UTF_8)
-        case XmlResponse(_, _, body, _)    => body.asString.getBytes(StandardCharsets.UTF_8)
-        case BinaryResponse(_, _, body, _) => body.asArray
+        case RawResponse(_, _, body, _)     => body.getBytes(StandardCharsets.UTF_8)
+        case JsonResponse(_, _, body, _, _) => body.noSpaces.getBytes(StandardCharsets.UTF_8)
+        case XmlResponse(_, _, body, _, _)  => body.asString.getBytes(StandardCharsets.UTF_8)
+        case BinaryResponse(_, _, body, _)  => body.asArray
         /**
          * все *ProxyResponse преобразуются в RawResponse внутри [[PublicApiHandler]] (методы *proxyRequest)
          */

@@ -49,6 +49,16 @@ package object json {
   }
 
   implicit final class JsonTransformations(private val j: Json) extends AnyVal {
+    def isTemplate: Boolean =
+      j.fold(
+        false,
+        _ => false,
+        _ => false,
+        str => JORx.findFirstIn(str).isDefined || FunRx.findFirstIn(str).isDefined || SubstRx.findFirstIn(str).isDefined,
+        _.exists(_.isTemplate),
+        _.values.exists(_.isTemplate)
+      )
+
     def transformValues(
         f: Json => Json
     ): TailRec[Json] =

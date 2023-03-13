@@ -71,7 +71,7 @@ val mockingbird = (project in file("mockingbird"))
       "io.scalaland"                  %% "chimney"             % "0.6.1",
       "com.ironcorelabs"              %% "cats-scalatest"      % "3.0.8" % Test,
       "com.google.code.findbugs"       % "jsr305"              % "3.0.2" % Optional,
-      "com.github.dwickern"           %% "scala-nameof"        % "3.0.0" % Provided,
+      "com.github.dwickern"           %% "scala-nameof"        % "4.0.0" % Provided,
       "com.github.os72"                % "protobuf-dynamic"    % "1.0.1",
       "com.github.geirolz"            %% "advxml-core"         % "2.5.1",
       "com.github.geirolz"            %% "advxml-xpath"        % "2.5.1",

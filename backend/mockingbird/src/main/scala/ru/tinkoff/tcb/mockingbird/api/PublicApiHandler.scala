@@ -122,9 +122,11 @@ final class PublicApiHandler(
           )
         case _ =>
           ZIO.succeed(
-            (HttpStubResponse.jsonBody
-              .update(_, _.substitute(data).substitute(xdata)))
-              .andThen(HttpStubResponse.xmlBody.update(_, _.substitute(data).substitute(xdata)))(stub.response)
+            if (stub.response.isTemplate) {
+              HttpStubResponse.jsonBody
+                .updateF(_.substitute(data).substitute(xdata))
+                .andThen(HttpStubResponse.xmlBody.updateF(_.substitute(data).substitute(xdata)))(stub.response)
+            } else stub.response
           )
       }
       _ <- ZIO.when(stub.scope == Scope.Countdown)(stubDAO.updateById(stub.id, prop[HttpStub](_.times).inc(-1)))
