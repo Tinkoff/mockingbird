@@ -20,10 +20,13 @@ import kantan.xpath.Node as KNode
 import kantan.xpath.implicits.*
 
 import ru.tinkoff.tcb.utils.json.json2StringFolder
+import ru.tinkoff.tcb.utils.regex.OneOrMore
 import ru.tinkoff.tcb.utils.transformation.json.jsonTemplater
 import ru.tinkoff.tcb.xpath.*
 
 package object xml {
+  private object SubstRxs extends OneOrMore(SubstRx)
+
   private def nt(values: KNode): PartialFunction[String, Option[String]] = { case SubstRx(Xexpr(xe)) =>
     values.evalXPath[String](xe).toOption
   }
@@ -39,6 +42,23 @@ package object xml {
     nt(values).andThen { case Some(s) => s }
 
   implicit class XmlTransformation(private val n: Node) extends AnyVal {
+    def isTemplate: Boolean =
+      n match {
+        case elem: Elem =>
+          elem.attributes.exists(attr =>
+            attr.value match {
+              case Seq(Text(SubstRx(Xexpr(_)))) => true
+              case Seq(Text(FunRx()))           => true
+              case Seq(Text(SubstRxs()))        => true
+              case _                            => false
+            }
+          ) || elem.child.exists(_.isTemplate)
+        case Text(SubstRx(Xexpr(_))) => true
+        case Text(FunRx())           => true
+        case Text(SubstRxs())        => true
+        case _                       => false
+      }
+
     def transform(pf: PartialFunction[Node, Node]): TailRec[Node] =
       pf.applyOrElse(n, identity[Node]) match {
         case elem: Elem => elem.child.toVector.traverse(_.transform(pf)).map(children => elem.copy(child = children))

@@ -12,6 +12,8 @@ import glass.Property
 import glass.Subset
 import glass.macros.GenContains
 import glass.macros.GenSubset
+import io.circe.Decoder
+import io.circe.Encoder
 import io.circe.Json
 import sttp.tapir.derevo.schema
 import sttp.tapir.generic.Configuration as TapirConfig
@@ -24,6 +26,8 @@ import ru.tinkoff.tcb.protocol.bson.*
 import ru.tinkoff.tcb.protocol.json.*
 import ru.tinkoff.tcb.protocol.schema.*
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
+import ru.tinkoff.tcb.utils.transformation.json.JsonTransformations
+import ru.tinkoff.tcb.utils.transformation.xml.XmlTransformation
 import ru.tinkoff.tcb.utils.xml.XMLString
 import ru.tinkoff.tcb.xpath.SXpath
 
@@ -37,6 +41,7 @@ import ru.tinkoff.tcb.xpath.SXpath
 @BsonDiscriminator("mode")
 sealed trait HttpStubResponse {
   def delay: Option[FiniteDuration]
+  def isTemplate: Boolean
 }
 
 object HttpStubResponse {
@@ -64,28 +69,45 @@ final case class RawResponse(
     headers: Map[String, String],
     body: String,
     delay: Option[FiniteDuration]
-) extends HttpStubResponse
+) extends HttpStubResponse {
+  val isTemplate: Boolean = false
+}
 
-@derive(decoder, encoder)
 final case class JsonResponse(
     code: Int,
     headers: Map[String, String],
     body: Json,
-    delay: Option[FiniteDuration]
+    delay: Option[FiniteDuration],
+    isTemplate: Boolean = true
 ) extends HttpStubResponse
 
 object JsonResponse {
   val prism: Subset[HttpStubResponse, JsonResponse] = GenSubset[HttpStubResponse, JsonResponse]
 
   val body: Contains[JsonResponse, Json] = GenContains[JsonResponse](_.body)
+
+  implicit val jrEncoder: Encoder.AsObject[JsonResponse] =
+    Encoder.forProduct4(
+      nameOf[JsonResponse](_.code),
+      nameOf[JsonResponse](_.headers),
+      nameOf[JsonResponse](_.body),
+      nameOf[JsonResponse](_.delay)
+    )(jr => (jr.code, jr.headers, jr.body, jr.delay))
+
+  implicit val jrDecoder: Decoder[JsonResponse] = Decoder.forProduct4(
+    nameOf[JsonResponse](_.code),
+    nameOf[JsonResponse](_.headers),
+    nameOf[JsonResponse](_.body),
+    nameOf[JsonResponse](_.delay)
+  )((code, headers, bdy, delay) => JsonResponse(code, headers, bdy, delay, bdy.isTemplate))
 }
 
-@derive(decoder, encoder)
 final case class XmlResponse(
     code: Int,
     headers: Map[String, String],
     body: XMLString,
-    delay: Option[FiniteDuration]
+    delay: Option[FiniteDuration],
+    isTemplate: Boolean = true
 ) extends HttpStubResponse {
   lazy val node: Node = body.toNode
 }
@@ -99,6 +121,22 @@ object XmlResponse {
 
     override def extract(s: XmlResponse): Node = s.node
   }
+
+  implicit val xrEncoder: Encoder.AsObject[XmlResponse] =
+    Encoder.forProduct4(
+      nameOf[XmlResponse](_.code),
+      nameOf[XmlResponse](_.headers),
+      nameOf[XmlResponse](_.body),
+      nameOf[XmlResponse](_.delay)
+    )(xr => (xr.code, xr.headers, xr.body, xr.delay))
+
+  implicit val xrDecoder: Decoder[XmlResponse] =
+    Decoder.forProduct4(
+      nameOf[XmlResponse](_.code),
+      nameOf[XmlResponse](_.headers),
+      nameOf[XmlResponse](_.body),
+      nameOf[XmlResponse](_.delay)
+    )((code, headers, bdy, delay) => XmlResponse(code, headers, bdy, delay, bdy.toNode.isTemplate))
 }
 
 @derive(decoder, encoder)
@@ -107,7 +145,9 @@ final case class BinaryResponse(
     headers: Map[String, String],
     body: ByteArray,
     delay: Option[FiniteDuration]
-) extends HttpStubResponse
+) extends HttpStubResponse {
+  val isTemplate: Boolean = false
+}
 
 object BinaryResponse {
   val prism: Subset[HttpStubResponse, BinaryResponse] = GenSubset[HttpStubResponse, BinaryResponse]
@@ -118,7 +158,9 @@ final case class ProxyResponse(
     uri: String,
     delay: Option[FiniteDuration],
     timeout: Option[FiniteDuration]
-) extends HttpStubResponse
+) extends HttpStubResponse {
+  val isTemplate: Boolean = false
+}
 
 @derive(decoder, encoder)
 final case class JsonProxyResponse(
@@ -126,7 +168,9 @@ final case class JsonProxyResponse(
     patch: Map[JsonOptic, String],
     delay: Option[FiniteDuration],
     timeout: Option[FiniteDuration]
-) extends HttpStubResponse
+) extends HttpStubResponse {
+  val isTemplate: Boolean = false
+}
 
 @derive(decoder, encoder)
 final case class XmlProxyResponse(
@@ -134,17 +178,19 @@ final case class XmlProxyResponse(
     patch: Map[SXpath, String],
     delay: Option[FiniteDuration],
     timeout: Option[FiniteDuration]
-) extends HttpStubResponse
+) extends HttpStubResponse {
+  val isTemplate: Boolean = false
+}
 
 object StubCode {
   def unapply(stub: HttpStubResponse): Option[Int] =
     stub match {
-      case RawResponse(code, _, _, _)    => Some(code)
-      case JsonResponse(code, _, _, _)   => Some(code)
-      case XmlResponse(code, _, _, _)    => Some(code)
-      case BinaryResponse(code, _, _, _) => Some(code)
-      case ProxyResponse(_, _, _)        => None
-      case JsonProxyResponse(_, _, _, _) => None
-      case XmlProxyResponse(_, _, _, _)  => None
+      case RawResponse(code, _, _, _)     => Some(code)
+      case JsonResponse(code, _, _, _, _) => Some(code)
+      case XmlResponse(code, _, _, _, _)  => Some(code)
+      case BinaryResponse(code, _, _, _)  => Some(code)
+      case ProxyResponse(_, _, _)         => None
+      case JsonProxyResponse(_, _, _, _)  => None
+      case XmlProxyResponse(_, _, _, _)   => None
     }
 }

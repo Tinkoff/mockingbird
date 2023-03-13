@@ -67,6 +67,8 @@ class XmlTransformationSpec extends AnyFunSuite with Matchers {
         <tag4>%{{UUID}}</tag4>
       </root>
 
+    template.isTemplate shouldBe true
+
     val res = template.eval
 
     (res \ "tag1").text should have length 10
@@ -129,5 +131,41 @@ class XmlTransformationSpec extends AnyFunSuite with Matchers {
 
     (sut \ "inner").text shouldBe "nondesc"
     (sut \ "second").text shouldBe "this"
+  }
+
+  test("Template checker") {
+    val simpleNode: Node =
+      <root>
+        <inner>test</inner>
+        <second>test</second>
+      </root>
+
+    simpleNode.isTemplate shouldBe false
+
+    val template1: Node =
+      <root rt="${/root/rt}">
+      </root>
+
+    template1.isTemplate shouldBe true
+
+    val template2: Node =
+      <root rt="${root.rt}_${root.t2}">
+      </root>
+
+    template2.isTemplate shouldBe true
+
+    val template3: Node =
+      <root>
+        <tag1 t1="a1">${{/root/tag1}}</tag1>
+      </root>
+
+    template3.isTemplate shouldBe true
+
+    val template4: Node =
+      <root>
+        <tag1 t1="a1">${{root.tag1}}_${{root.tag2}}</tag1>
+      </root>
+
+    template4.isTemplate shouldBe true
   }
 }

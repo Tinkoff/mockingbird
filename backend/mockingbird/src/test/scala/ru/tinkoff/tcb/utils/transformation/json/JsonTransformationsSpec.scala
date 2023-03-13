@@ -26,6 +26,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
       "composite" := "${extras.topic}: ${description}"
     )
 
+    template.isTemplate shouldBe true
+
     val values = Json.obj(
       "description" := "Some description",
       "extras" := Json.obj(
@@ -34,6 +36,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
         "comments" := Json.obj("text" := "First nah!") :: Json.obj("text" := "Okay") :: Nil
       )
     )
+
+    values.isTemplate shouldBe false
 
     val sut = template.substitute(values)
 
@@ -73,6 +77,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
       "c" := "$:{n}"
     )
 
+    template.isTemplate shouldBe true
+
     val values = Json.obj(
       "b1" := true,
       "b2" := false,
@@ -94,6 +100,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
       "b" := "$~{b2}",
       "c" := "$~{n}"
     )
+
+    template.isTemplate shouldBe true
 
     val values = Json.obj(
       "b1" := "true",
@@ -117,6 +125,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
       "value1" := "${/root/tag1}",
       "value2" := "${/root/tag2}"
     )
+
+    template.isTemplate shouldBe true
 
     val data = xml("<root><tag1>test</tag1><tag2>42</tag2></root>")
 
@@ -152,6 +162,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
       "e" := s"%{now($pattern)}",
       "f" := s"%{today($datePattern)}"
     )
+
+    template.isTemplate shouldBe true
 
     val res = template.eval
 
@@ -190,6 +202,8 @@ class JsonTransformationsSpec extends AnyFunSuite with Matchers with OptionValue
     val template = Json.obj(
       "fmt" := "%{randomInt(10)}: %{randomLong(10)} | %{randomString(12)}"
     )
+
+    template.isTemplate shouldBe true
 
     val res = template.eval
 
