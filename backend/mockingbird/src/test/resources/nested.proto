@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package utp.stock_service.v1;
+
+message GetStocksRequest {
+  repeated string offer_codes = 1;
+  int32 offset = 2;
+  int32 limit = 3 ;
+}
+
+message GetStocksResponse {
+  message Stock {
+    int64 quantity = 1;
+    string name = 2;
+  }
+  message Stocks {
+    repeated Stock stocks = 1;
+  }
+}
+
+service StockService {
+  rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
+}
