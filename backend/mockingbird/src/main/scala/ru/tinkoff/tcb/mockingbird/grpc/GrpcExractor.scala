@@ -11,6 +11,7 @@ import com.google.protobuf.util.JsonFormat
 import io.circe.Json
 import io.circe.parser.*
 import io.estatico.newtype.ops.*
+import mouse.boolean.*
 import mouse.ignore
 import org.apache.commons.io.output.ByteArrayOutputStream
 
@@ -38,7 +39,7 @@ object GrpcExractor {
 
   def addSchemaToRegistry(schema: GrpcRootMessage, registry: DynamicSchema.Builder): Unit =
     schema match {
-      case GrpcMessageSchema(name, fields, oneofs) =>
+      case GrpcMessageSchema(name, fields, oneofs, nested) =>
         val builder = MessageDefinition
           .newBuilder(name)
         fields.foreach {
@@ -54,6 +55,18 @@ object GrpcExractor {
             oneOfBuilder.addField(of.typeName, of.name, of.order)
           }
         }
+        nested.getOrElse(List.empty).foreach { nst =>
+          val nestedBuilder = MessageDefinition.newBuilder(nst.name)
+          nst.fields.foreach {
+            case f if f.label == GrpcLabel.Optional =>
+              val oneOfBuilder = nestedBuilder.addOneof(s"_${f.name}")
+              oneOfBuilder.addField(f.typeName, f.name, f.order)
+            case f =>
+              nestedBuilder.addField(f.label.entryName, f.typeName, f.name, f.order)
+          }
+          builder.addMessageDefinition(nestedBuilder.build())
+        }
+
         ignore(registry.addMessageDefinition(builder.build()))
       case GrpcEnumSchema(name, values) =>
         val builder = EnumDefinition
@@ -76,6 +89,7 @@ object GrpcExractor {
       val registryBuilder: DynamicSchema.Builder = DynamicSchema.newBuilder()
       val messageSchemas                         = definition.schemas
       registryBuilder.setName(definition.name)
+      definition.`package`.foreach(registryBuilder.setPackage)
       messageSchemas.foreach(addSchemaToRegistry(_, registryBuilder))
       registryBuilder.build()
     }
@@ -104,74 +118,66 @@ object GrpcExractor {
   implicit class FromDynamicSchema(private val dynamicSchema: DynamicSchema) extends AnyVal {
     def toGrpcProtoDefinition: GrpcProtoDefinition = {
       val descriptor: DescriptorProtos.FileDescriptorProto = dynamicSchema.getFileDescriptorSet.getFile(0)
+      val namespace                                        = descriptor.hasPackage.option(descriptor.getPackage)
       val enums = descriptor.getEnumTypeList.asScala.map { enum =>
         GrpcEnumSchema(
           enum.getName,
           enum.getValueList.asScala.map(i => (i.getName.coerce[FieldName], i.getNumber.coerce[FieldNumber])).toMap
         )
       }.toList
-      val maps = descriptor.getMessageTypeList.asScala
-        .map(message => (message, message.getNestedTypeList.asScala.toList))
-        .toList
-        .flatMap { case (m, list) =>
-          val messageName = m.getName
-          list.map { nested =>
-            val key        = primitiveTypes(nested.getFieldList.asScala.head.getType.name())
-            val valueField = nested.getFieldList.asScala(1)
-            val value      = getFieldType(valueField, getGrpcType(valueField) == GrpcType.Custom)
-            GrpcMessageSchema(
-              s"${messageName}_${nested.getName}",
-              List(
-                GrpcField(GrpcType.Primitive, GrpcLabel.Optional, key, "key", 1),
-                GrpcField(getGrpcType(valueField), GrpcLabel.Optional, value, "value", 2)
-              )
-            )
-          }
-        }
       val messages = descriptor.getMessageTypeList.asScala
         .filter(!_.getOptions.getMapEntry)
-        .map { message =>
-          val (fields, oneofs) = message.getFieldList.asScala.toList
-            .partition(f =>
-              !f.hasOneofIndex || isProto3OptionalField(f, message.getOneofDeclList.asScala.map(_.getName).toSet)
-            )
-          GrpcMessageSchema(
-            message.getName,
-            fields
-              .map { field =>
-                val label = GrpcLabel.withValue(field.getLabel.toString.split("_").last.toLowerCase).pipe { label =>
-                  if (
-                    label == GrpcLabel.Optional && (!isProto3OptionalField(
-                      field,
-                      message.getOneofDeclList.asScala.map(_.getName).toSet
-                    ))
-                  ) GrpcLabel.Required
-                  else label
-                }
-                getGrpcField(field, label)
-              },
-            oneofs
-              .groupMap(_.getOneofIndex) { field =>
-                getGrpcField(field, GrpcLabel.Optional)
-              }
-              .map { case (index, fields) =>
-                GrpcOneOfSchema(
-                  message.getOneofDeclList.asScala(index).getName,
-                  fields
-                )
-              }
-              .toList match {
-              case Nil  => None
-              case list => Some(list)
-            }
-          )
-        }
+        .map(message2messageSchema)
         .toList
       GrpcProtoDefinition(
         descriptor.getName,
-        enums ++ messages ++ maps
+        enums ++ messages,
+        namespace
       )
     }
+  }
+
+  private def message2messageSchema(message: DescriptorProtos.DescriptorProto): GrpcMessageSchema = {
+    val (fields, oneofs) = message.getFieldList.asScala.toList
+      .partition(f => !f.hasOneofIndex || isProto3OptionalField(f, message.getOneofDeclList.asScala.map(_.getName).toSet))
+
+    val nested = message.getNestedTypeList.asScala.toList
+
+    GrpcMessageSchema(
+      message.getName,
+      fields
+        .map { field =>
+          val label = GrpcLabel.withValue(field.getLabel.toString.split("_").last.toLowerCase).pipe { label =>
+            if (
+              label == GrpcLabel.Optional && (!isProto3OptionalField(
+                field,
+                message.getOneofDeclList.asScala.map(_.getName).toSet
+              ))
+            ) GrpcLabel.Required
+            else label
+          }
+          getGrpcField(field, label)
+        },
+      oneofs
+        .groupMap(_.getOneofIndex) { field =>
+          getGrpcField(field, GrpcLabel.Optional)
+        }
+        .map { case (index, fields) =>
+          GrpcOneOfSchema(
+            message.getOneofDeclList.asScala(index).getName,
+            fields
+          )
+        }
+        .toList match {
+        case Nil  => None
+        case list => Some(list)
+      },
+      nested
+        .map(message2messageSchema) match {
+        case Nil  => None
+        case list => Some(list)
+      }
+    )
   }
 
   private def isProto3OptionalField(field: DescriptorProtos.FieldDescriptorProto, oneOfFields: Set[String]): Boolean =
@@ -194,10 +200,6 @@ object GrpcExractor {
     else GrpcType.Primitive
 
   private def getFieldType(field: DescriptorProtos.FieldDescriptorProto, custom: Boolean): String =
-    if (custom) getCustomFieldName(field)
+    if (custom) field.getTypeName
     else primitiveTypes(field.getType.name())
-
-  private def getCustomFieldName(field: DescriptorProtos.FieldDescriptorProto): String =
-    field.getTypeName.split("\\.").filter(_ != "").mkString("_")
-
 }
