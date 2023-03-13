@@ -64,6 +64,11 @@ jobs:
           java-version: 17
           check-latest: true
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.20.0'
+
       - name: Compile and test
         run: |
           cd backend
@@ -128,6 +133,11 @@ jobs:
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: 'true'
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.20.0'
 
       - name: Compile and test
         run: |

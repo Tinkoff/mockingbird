@@ -29,7 +29,7 @@ object MappersSpec extends ZIOSpecDefault {
         readStream <- ZManaged.fromAutoCloseable {
           ZIO.attemptBlockingIO(
             Files.newInputStream(
-              Paths.get("/Users/d.savitskiy/Projects/mockingbird/mockingbird/src/test/resources/requests.proto")
+              Paths.get("./mockingbird/src/test/resources/requests.proto")
             )
           )
         }

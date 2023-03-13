@@ -89,6 +89,7 @@ object Settings {
       IgnoredPackage("io.netty.channel.kqueue")
     ),
     dockerize := ciEnabled,
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
   def docker(
