@@ -42,6 +42,13 @@ object WebAPI {
       publicAPI.http.foreach(_(router))
       ui.http.foreach(_(router))
       metrics.http(router)
+      serverConfig.healthCheckRoute.foreach { url =>
+        router.route().path(url).handler { ctx =>
+          val response = ctx.response()
+          response.setStatusCode(200)
+          response.end().result()
+        }
+      }
       server.requestHandler(router).listen(serverConfig.port)
     } flatMap (_.asRIO)) { server =>
       ZIO.attempt(server.close()).flatMap(_.asRIO).orDie

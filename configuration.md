@@ -10,7 +10,8 @@ Mockingbird конфигурируется посредством файла sec
         "http://localhost",
         "http://localhost:3000",
         ...
-      ]
+      ],
+      "healthCheckRoute": "/ready"
     },
     "security": {
       "secret": ".."
@@ -41,6 +42,8 @@ Mockingbird конфигурируется посредством файла sec
 ### Секция server
 
 Здесь указыватся ориджены для CORS. Эти настройки влияют на работоспособность UI Mockingbird, а также swagger-ui
+
+healthCheckRoute - необязательный параметр, позволяет настроить эндпоинт, всегда отдающий 200 OK, полезно для healthcheck
 
 ### Секция security
 

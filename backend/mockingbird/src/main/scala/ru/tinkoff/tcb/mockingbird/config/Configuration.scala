@@ -8,7 +8,7 @@ import net.ceedubs.ficus.Ficus.*
 import net.ceedubs.ficus.readers.ArbitraryTypeReader.*
 import net.ceedubs.ficus.readers.EnumerationReader.*
 
-case class ServerConfig(interface: String, port: Int, allowedOrigins: Seq[String])
+case class ServerConfig(interface: String, port: Int, allowedOrigins: Seq[String], healthCheckRoute: Option[String])
 
 case class SecurityConfig(secret: String)
 
