@@ -1,6 +1,7 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  - push
 
 jobs:
   front-build:
@@ -87,21 +88,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push docker image (staging)
-        uses: docker/build-push-action@v3
-        with:
-          context: ./backend/mockingbird-api/target/docker/stage
-          push: true
-          tags: ghcr.io/tinkoff/mockingbird:${{ github.sha }}
-        if: ${{ github.ref_type == 'branch' }}
-
-      - name: Build and push docker image (release)
+      - name: Build and push docker image
         uses: docker/build-push-action@v3
         with:
           context: ./backend/mockingbird-api/target/docker/stage
           push: true
           tags: ghcr.io/tinkoff/mockingbird:${{ github.ref_name }}
-        if: ${{ github.ref_type == 'tag' }}
 
       - name: Publish layers
         uses: svenstaro/upload-release-action@v2
@@ -151,18 +143,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push docker image (staging)
-        uses: docker/build-push-action@v3
-        with:
-          context: ./backend/mockingbird-native/target/docker/stage
-          push: true
-          tags: ghcr.io/tinkoff/mockingbird:${{ github.sha }}-native
-        if: ${{ github.ref_type == 'branch' }}
-
-      - name: Build and push docker image (release)
+      - name: Build and push docker image
         uses: docker/build-push-action@v3
         with:
           context: ./backend/mockingbird-native/target/docker/stage
           push: true
           tags: ghcr.io/tinkoff/mockingbird:${{ github.ref_name }}-native
-        if: ${{ github.ref_type == 'tag' }}
