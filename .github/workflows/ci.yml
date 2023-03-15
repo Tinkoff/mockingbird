@@ -1,6 +1,7 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  - push
 
 jobs:
   front-build:
@@ -69,6 +70,13 @@ jobs:
         with:
           version: '3.20.0'
 
+      - name: Get the Ref
+        id: get-ref
+        uses: ankitvgupta/ref-to-tag-action@v1.0.1
+        with:
+          ref: ${{ github.ref }}
+          head_ref: ${{ github.head_ref }}
+
       - name: Compile and test
         run: |
           cd backend
@@ -86,22 +94,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.ref_type == 'tag' || startsWith(github.event.head_commit.message, '[docker]') }}
 
-      - name: Build and push docker image (staging)
+      - name: Build and push docker image
         uses: docker/build-push-action@v3
         with:
           context: ./backend/mockingbird-api/target/docker/stage
           push: true
-          tags: ghcr.io/tinkoff/mockingbird:${{ github.sha }}
-        if: ${{ github.ref_type == 'branch' }}
-
-      - name: Build and push docker image (release)
-        uses: docker/build-push-action@v3
-        with:
-          context: ./backend/mockingbird-api/target/docker/stage
-          push: true
-          tags: ghcr.io/tinkoff/mockingbird:${{ github.ref_name }}
-        if: ${{ github.ref_type == 'tag' }}
+          tags: ghcr.io/tinkoff/mockingbird:${{ steps.get-ref.outputs.tag }}
+        if: ${{ github.ref_type == 'tag' || startsWith(github.event.head_commit.message, '[docker]') }}
 
       - name: Publish layers
         uses: svenstaro/upload-release-action@v2
@@ -138,6 +139,13 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: '3.20.0'
+      
+      - name: Get the Ref
+        id: get-ref
+        uses: ankitvgupta/ref-to-tag-action@v1.0.1
+        with:
+          ref: ${{ github.ref }}
+          head_ref: ${{ github.head_ref }}
 
       - name: Compile and test
         run: |
@@ -150,19 +158,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.ref_type == 'tag' || startsWith(github.event.head_commit.message, '[docker]') }}
 
-      - name: Build and push docker image (staging)
+      - name: Build and push docker image
         uses: docker/build-push-action@v3
         with:
           context: ./backend/mockingbird-native/target/docker/stage
           push: true
-          tags: ghcr.io/tinkoff/mockingbird:${{ github.sha }}-native
-        if: ${{ github.ref_type == 'branch' }}
-
-      - name: Build and push docker image (release)
-        uses: docker/build-push-action@v3
-        with:
-          context: ./backend/mockingbird-native/target/docker/stage
-          push: true
-          tags: ghcr.io/tinkoff/mockingbird:${{ github.ref_name }}-native
-        if: ${{ github.ref_type == 'tag' }}
+          tags: ghcr.io/tinkoff/mockingbird:${{ steps.get-ref.outputs.tag }}-native
+        if: ${{ github.ref_type == 'tag' || startsWith(github.event.head_commit.message, '[docker]') }}
