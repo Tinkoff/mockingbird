@@ -173,16 +173,21 @@ final class ScenarioEngine(
         dest.request.body.fold {
           rt.body(
             out match {
-              case RawOutput(payload, _)  => payload
-              case JsonOutput(payload, _) => payload.substitute(data).substitute(xdata).noSpaces
-              case XmlOutput(payload, _)  => payload.toNode.substitute(data).substitute(xdata).mkString
+              case RawOutput(payload, _) => payload
+              case JsonOutput(payload, _, isT) =>
+                if (isT) payload.substitute(data).substitute(xdata).noSpaces else payload.noSpaces
+              case XmlOutput(payload, _, isT) =>
+                if (isT) payload.toNode.substitute(data).substitute(xdata).mkString else payload.asString
             }
           )
         } { drb =>
           val bodyJson = out match {
-            case RawOutput(payload, _)  => Json.fromString(payload)
-            case JsonOutput(payload, _) => payload.substitute(data).substitute(xdata)
-            case XmlOutput(payload, _)  => Json.fromString(payload.toNode.substitute(data).substitute(xdata).mkString)
+            case RawOutput(payload, _)       => Json.fromString(payload)
+            case JsonOutput(payload, _, isT) => if (isT) payload.substitute(data).substitute(xdata) else payload
+            case XmlOutput(payload, _, isT) =>
+              if (isT)
+                Json.fromString(payload.toNode.substitute(data).substitute(xdata).mkString)
+              else Json.fromString(payload.asString)
           }
 
           rt.body(
