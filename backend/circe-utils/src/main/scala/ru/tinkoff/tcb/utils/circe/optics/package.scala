@@ -32,7 +32,9 @@ package object optics {
               }
             }
             .getOrElse(construct(part, mod(None)))
-      case Traverse => json => json.withArray(arr => Json.fromValues(arr.map(j => mod(Some(j)))))
+      case Traverse =>
+        json =>
+          json.asArray.map(arr => Json.fromValues(arr.map(j => mod(Some(j))))).getOrElse(construct(part, mod(None)))
     }
   }
 
