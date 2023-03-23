@@ -245,6 +245,13 @@ class OpticSpec extends RefSpec with Matchers {
 
         result shouldBe json"""{"a": [{"b": 4}, {"b": 4}, {"b": 4}]}"""
       }
+
+      def `should properly re-create complete structure`: Assertion = {
+        val target = Json.obj()
+        val result = optic.set(Json.fromInt(4))(target)
+
+        result shouldBe json"""{"a": [{"b": 4}]}"""
+      }
     }
 
     object `json getter` {
