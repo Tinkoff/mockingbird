@@ -11,7 +11,6 @@ import sttp.tapir.ztapir.*
 
 import ru.tinkoff.tcb.mockingbird.api.exec.*
 import ru.tinkoff.tcb.mockingbird.build.BuildInfo
-import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.model.BinaryResponse
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
 import ru.tinkoff.tcb.mockingbird.model.HttpStubResponse
@@ -25,16 +24,11 @@ import ru.tinkoff.tcb.mockingbird.model.XmlResponse
 import ru.tinkoff.tcb.mockingbird.wldRuntime
 
 final class PublicHttp(handler: PublicApiHandler) {
-  private val endpointsWithoutBody   = List(getEndpoint, headEndpoint, optionsEndpoint, deleteEndpoint)
-  private val endpointsWithBody      = List(postEndpoint, putEndpoint, patchEndpoint)
+  private val endpointsWithString =
+    List(getEndpoint, headEndpoint, optionsEndpoint, deleteEndpoint, postEndpoint, putEndpoint, patchEndpoint)
   private val endpointsWithMultipart = List(postMultipartEndpoint, putMultipartEndpoint, patchMultipartEndpoint)
 
-  private val withoutBody =
-    endpointsWithoutBody
-      .map(_.zServerLogic[WLD]((handle(_, _, _, _, AbsentRequestBody)).tupled))
-  private val withBody =
-    endpointsWithBody
-      .map(_.zServerLogic[WLD]((handle _).tupled))
+  private val withString = endpointsWithString.map(_.zServerLogic[WLD]((handle _).tupled))
   private val withMultipart =
     endpointsWithMultipart.map(_.zServerLogic[WLD]((handle _).tupled))
 
@@ -47,7 +41,7 @@ final class PublicHttp(handler: PublicApiHandler) {
         useRelativePaths = false
       )
     ).fromEndpoints[RIO[WLD, *]](
-      endpointsWithoutBody ++ endpointsWithBody ++ endpointsWithMultipart,
+      endpointsWithString ++ endpointsWithMultipart,
       "Mockingbird",
       BuildInfo.version
     )
@@ -56,7 +50,7 @@ final class PublicHttp(handler: PublicApiHandler) {
     VertxZioServerOptions.customiseInterceptors[WLD].notAcceptableInterceptor(None).options
 
   val http: List[Router => Route] =
-    (withoutBody ++ withBody ++ withMultipart ++ swaggerEndpoints)
+    (withString ++ withMultipart ++ swaggerEndpoints)
       .map(VertxZioServerInterpreter(options).route(_)(wldRuntime))
 
   private def handle(
