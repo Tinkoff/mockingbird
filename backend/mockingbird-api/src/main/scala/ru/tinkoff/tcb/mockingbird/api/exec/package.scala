@@ -7,7 +7,7 @@ import sttp.tapir.*
 
 import ru.tinkoff.tcb.mockingbird.api.input.*
 import ru.tinkoff.tcb.mockingbird.codec.*
-import ru.tinkoff.tcb.mockingbird.model.HttpMethod
+import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.model.HttpStubResponse
 import ru.tinkoff.tcb.mockingbird.model.MultipartRequestBody
 import ru.tinkoff.tcb.mockingbird.model.RequestBody
@@ -28,22 +28,14 @@ package object exec {
     }
   }
 
-  private val bodylessEndpoint: PublicEndpoint[
-    ExecInput,
-    Throwable,
-    (List[Header], HttpStubResponse),
-    Any
-  ] = baseEndpoint
-    .in(execInput)
-    .out(headers)
-    .out(oneOf(variants.head, variants.tail*))
-
   private val withBody: PublicEndpoint[ExecInputB, Throwable, (List[Header], HttpStubResponse), Any] =
     baseEndpoint
       .in(execInput)
       .in(
-        binaryBody(RawBodyType.ByteArrayBody)[String]
-          .map[RequestBody](SimpleRequestBody(_))(SimpleRequestBody.subset.getOption(_).get.value)
+        binaryBody(RawBodyType.ByteArrayBody)[Option[String]]
+          .map[RequestBody]((_: Option[String]).fold[RequestBody](AbsentRequestBody)(SimpleRequestBody(_)))(
+            SimpleRequestBody.subset.getOption(_).map(_.value)
+          )
       )
       .out(headers)
       .out(oneOf(variants.head, variants.tail*))
@@ -62,11 +54,11 @@ package object exec {
       .out(oneOf(variants.head, variants.tail*))
 
   val getEndpoint: PublicEndpoint[
-    (HttpMethod, String, Map[String, String], Map[String, String]),
+    ExecInputB,
     Throwable,
     (List[Header], HttpStubResponse),
     Any
-  ] = bodylessEndpoint.get
+  ] = withBody.get
 
   val postEndpoint: PublicEndpoint[
     ExecInputB,
@@ -83,11 +75,11 @@ package object exec {
   ] = withBody.put
 
   val deleteEndpoint: PublicEndpoint[
-    ExecInput,
+    ExecInputB,
     Throwable,
     (List[Header], HttpStubResponse),
     Any
-  ] = bodylessEndpoint.delete
+  ] = withBody.delete
 
   val patchEndpoint: PublicEndpoint[
     ExecInputB,
@@ -97,18 +89,18 @@ package object exec {
   ] = withBody.patch
 
   val headEndpoint: PublicEndpoint[
-    ExecInput,
+    ExecInputB,
     Throwable,
     (List[Header], HttpStubResponse),
     Any
-  ] = bodylessEndpoint.head
+  ] = withBody.head
 
   val optionsEndpoint: PublicEndpoint[
-    ExecInput,
+    ExecInputB,
     Throwable,
     (List[Header], HttpStubResponse),
     Any
-  ] = bodylessEndpoint.options
+  ] = withBody.options
 
   // Multipart endpoints
 

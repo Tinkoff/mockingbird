@@ -44,6 +44,8 @@ package object codec {
       }
     }
 
-  implicit val binaryStringCodec: Codec[Array[Byte], String, CodecFormat.OctetStream] =
-    Codec.byteArray.map(new String(_, StandardCharsets.UTF_8))(_.getBytes(StandardCharsets.UTF_8))
+  implicit val binaryOptionalStringCodec: Codec[Array[Byte], Option[String], CodecFormat.OctetStream] =
+    Codec.byteArray.map(arr => if (arr.nonEmpty) Some(new String(arr, StandardCharsets.UTF_8)) else None)(
+      _.fold(Array.emptyByteArray)(_.getBytes(StandardCharsets.UTF_8))
+    )
 }
