@@ -1,14 +1,23 @@
 import React, { useCallback, useEffect } from 'react';
 import { useActions, useStoreSelector } from '@tramvai/state';
 import { useNavigate, useUrl } from '@tramvai/module-router';
-import Button from '@platform-ui/button';
-import Input from '@platform-ui/input';
-import Loader from '@platform-ui/loader';
-import Select, { MultiselectTagged } from '@platform-ui/select';
+import {
+  Flex,
+  Box,
+  Space,
+  Button,
+  Select,
+  MultiSelect,
+  TextInput,
+} from '@mantine/core';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore for tree shaking purposes
+import IconX from '@tabler/icons-react/dist/esm/icons/IconX';
 import useDebounce from 'src/infrastructure/utils/hooks/debouce';
 import { selectorAsIs } from 'src/mockingbird/infrastructure/helpers/state';
 import useLabels from 'src/mockingbird/modules/labels';
 import { mapSelectItem } from 'src/mockingbird/infrastructure/helpers/forms';
+import type { MocksState } from 'src/mockingbird/models/mocks/reducers/store';
 import mocksStore from 'src/mockingbird/models/mocks/reducers/store';
 import {
   fetchAction,
@@ -23,6 +32,7 @@ import PageHeader from 'src/components/PageHeader/PageHeader';
 import List from 'src/components/List/List';
 import ListError from 'src/components/List/ListError';
 import ListEmpty from 'src/components/List/ListEmpty';
+import { ListLoading } from 'src/components/List/ListLoading';
 import HTTPMock from './mocks/HTTPMock';
 import ScenarioItem from './mocks/ScenarioItem';
 import GRPCItem from './mocks/GRPCItem';
@@ -30,23 +40,26 @@ import styles from './common.css';
 
 const TYPES = [
   {
-    title: 'HTTP',
+    label: 'HTTP',
     value: 'http',
   },
   {
-    title: 'Scenario',
+    label: 'Scenario',
     value: 'scenario',
   },
   {
-    title: 'GRPC',
+    label: 'GRPC',
     value: 'grpc',
   },
 ];
 
+const MOCK_ITEM_HEIGHT = 80;
+
 export default function Mocks() {
-  const {
-    query: { service: serviceId },
-  } = useUrl();
+  const url = useUrl();
+  const serviceId = Array.isArray(url.query.service)
+    ? url.query.service[0]
+    : url.query.service;
   const navigateToCreate = useNavigate(getPathMockNew(serviceId));
 
   const service = useService(serviceId);
@@ -54,7 +67,7 @@ export default function Mocks() {
 
   const { status, mocks, type, query, labels, hasMore } = useStoreSelector(
     mocksStore,
-    selectorAsIs
+    selectorAsIs as (state: MocksState) => MocksState
   );
   const fetchMocks = useActions(fetchAction);
   const fetchMoreMocks = useActions(fetchMoreAction);
@@ -69,19 +82,22 @@ export default function Mocks() {
   }, [queryDebounced, serviceId, fetchMocks]);
 
   const handleChangeType = useCallback(
-    (_, { value }) => {
+    (value) => {
       setType(value);
     },
     [setType]
   );
   const handleChangeQuery = useCallback(
-    (_, { value }) => {
-      setQuery(value);
+    (e) => {
+      setQuery(e.currentTarget.value);
     },
     [setQuery]
   );
+  const handleResetQuery = useCallback(() => {
+    setQuery('');
+  }, [setQuery]);
   const handleChangeLabels = useCallback(
-    (_, { value }) => {
+    (value) => {
       setLabels(value);
     },
     [setLabels]
@@ -101,49 +117,56 @@ export default function Mocks() {
         backText="К списку сервисов"
         backPath={getPathServices()}
         right={
-          <Button size="m" onClick={navigateToCreate}>
+          <Button size="sm" onClick={navigateToCreate}>
             Создать
           </Button>
         }
       />
-      <Input
-        label="Поиск"
-        size="m"
+      <TextInput
+        placeholder="Поиск"
+        size="md"
         value={query}
         onChange={handleChangeQuery}
-        cleanable
+        rightSection={
+          query ? <IconX size="0.8rem" onClick={handleResetQuery} /> : null
+        }
       />
-      <div className={styles.row}>
-        <Select
-          label="Тип"
-          size="m"
-          options={TYPES}
-          value={type}
-          onChange={handleChangeType}
-        />
-        <MultiselectTagged
-          placeholder="Фильтр по лейблам"
-          size="m"
-          searchThreshold={2}
-          options={allLabels.map(mapSelectItem)}
-          value={labels}
-          onChange={handleChangeLabels}
-        />
-      </div>
-      {status === 'loading' && <Loader size="xxl" centered />}
+      <Flex mb="xl">
+        <Box sx={{ width: '50%' }}>
+          <Select
+            placeholder="Тип"
+            size="md"
+            data={TYPES}
+            value={type}
+            onChange={handleChangeType}
+          />
+        </Box>
+        <Space w="md" />
+        <Box sx={{ width: '50%' }}>
+          <MultiSelect
+            placeholder="Фильтр по лейблам"
+            size="md"
+            data={allLabels.map(mapSelectItem)}
+            value={labels}
+            onChange={handleChangeLabels}
+          />
+        </Box>
+      </Flex>
+      {status === 'loading' && <ListLoading mih={MOCK_ITEM_HEIGHT} />}
       {status === 'error' && <ListError onRetry={handleRetry} />}
       {status === 'complete' && !mocks.length && <ListEmpty />}
       {mocks && mocks.length > 0 && (
         <List>
           {mocks.map((i) => (
-            <ItemComponent key={i.id} item={i} serviceId={serviceId} />
+            <ItemComponent key={i.id} item={i as any} serviceId={serviceId} />
           ))}
         </List>
       )}
       {hasMore && (
         <div className={styles.buttonMore}>
           <Button
-            size="m"
+            size="md"
+            variant="outline"
             disabled={status === 'loading-more'}
             onClick={handleFetchMore}
           >

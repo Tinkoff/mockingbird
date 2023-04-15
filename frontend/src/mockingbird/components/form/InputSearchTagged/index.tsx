@@ -1,65 +1,66 @@
 import React, { useCallback } from 'react';
 import type { Control } from 'react-hook-form';
 import { useController } from 'react-hook-form';
-import PlatformInputSearchTagged from '@platform-ui/inputSearchTagged';
+import type { MultiSelectProps } from '@mantine/core';
+import { MultiSelect } from '@mantine/core';
 import {
-  mapSelectItem,
   mapSelectValue,
+  extractError,
 } from 'src/mockingbird/infrastructure/helpers/forms';
 
-interface Props {
+type Props = Omit<MultiSelectProps, 'data' | 'name'> & {
   name: string;
-  label: string;
-  options: any[];
+  options: string[];
   control: Control;
-  required?: boolean;
-  disabled?: boolean;
-}
+};
 
 export default function InputSearchTagged(props: Props) {
   const {
     name,
     label,
-    options,
+    placeholder,
+    options = [],
     control,
     required = false,
     disabled = false,
+    ...restProps
   } = props;
-  const { field } = useController({
+  const { field, formState, fieldState } = useController({
     name,
     control,
     rules: {
       required,
     },
-    defaultValue: [],
+    defaultValue: options,
   });
   const { value, onChange } = field;
-  const handleRequest = useCallback(
-    (query) => {
-      const q = query.trim().toLowerCase();
-      const currentOptions = value.length
-        ? options.filter((i) => !value.includes(i))
-        : options;
-      return q
-        ? currentOptions
-            .filter((i) => i.toLocaleString().includes(q))
-            .map(mapSelectItem)
-        : currentOptions.map(mapSelectItem);
-    },
-    [options, value]
-  );
   const handleChange = useCallback(
-    (_, { value: newValue }) => onChange(newValue.map(mapSelectValue)),
+    (val) => onChange(val.map(mapSelectValue)),
     [onChange]
   );
+  const uiError =
+    extractError(name, formState.errors) || fieldState.error?.message;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { ref, ...fieldProps } = field;
   return (
-    <PlatformInputSearchTagged
+    <MultiSelect
+      {...restProps}
       {...fieldProps}
-      onChange={handleChange}
-      request={handleRequest}
       label={label}
+      placeholder={placeholder}
       disabled={disabled}
+      data={value}
+      onChange={handleChange}
+      error={uiError}
+      searchable
+      creatable
+      getCreateLabel={(query) => `+ Добавить ${query}`}
+      onCreate={(q) => {
+        const query = q.trim().toLowerCase();
+        const item = { value: query, label: q };
+        onChange([...value, item]);
+        return item;
+      }}
     />
   );
 }

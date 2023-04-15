@@ -1,17 +1,14 @@
 import React, { useCallback } from 'react';
 import type { Control } from 'react-hook-form';
 import { useController } from 'react-hook-form';
-import PlatformInputCount from '@platform-ui/inputCount';
+import type { NumberInputProps } from '@mantine/core';
+import { NumberInput } from '@mantine/core';
+import { extractError } from 'src/mockingbird/infrastructure/helpers/forms';
 
-interface Props {
+type Props = Omit<NumberInputProps, 'name'> & {
   name: string;
-  label: string;
   control: Control;
-  required?: boolean;
-  disabled?: boolean;
-  min?: number;
-  max?: number;
-}
+};
 
 export default function InputCount(props: Props) {
   const {
@@ -22,8 +19,9 @@ export default function InputCount(props: Props) {
     disabled = false,
     min,
     max,
+    ...restProps
   } = props;
-  const { field } = useController({
+  const { field, formState, fieldState } = useController({
     name,
     control,
     rules: {
@@ -32,16 +30,17 @@ export default function InputCount(props: Props) {
     defaultValue: min,
   });
   const { onChange } = field;
-  const handleChange = useCallback(
-    (_, { value }) => onChange(value),
-    [onChange]
-  );
+  const handleChange = useCallback((value) => onChange(value), [onChange]);
+  const uiError =
+    extractError(name, formState.errors) || fieldState.error?.message;
   return (
-    <PlatformInputCount
+    <NumberInput
+      {...restProps}
       {...field}
+      required={required}
       onChange={handleChange}
       label={label}
-      required={required}
+      error={uiError}
       disabled={disabled}
       min={min}
       max={max}

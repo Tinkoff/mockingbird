@@ -1,8 +1,7 @@
-import type { ComponentType } from 'react';
 import React from 'react';
-import { Container } from '@platform-ui/navigation';
+import type { ComponentType } from 'react';
+import { MantineProvider, Container, SimpleGrid } from '@mantine/core';
 import { NotificationStack } from 'src/infrastructure/notifications';
-import styles from './Layout.css';
 
 interface Props {
   children: ComponentType<any>[];
@@ -11,12 +10,12 @@ interface Props {
 export const Layout = (props: Props) => {
   const [header, page] = props.children;
   return (
-    <div className={styles.root}>
+    <MantineProvider withGlobalStyles withNormalizeCSS>
       {header}
       <NotificationStack />
       <Container>
-        <main className={styles.content}>{page}</main>
+        <SimpleGrid cols={1}>{page}</SimpleGrid>
       </Container>
-    </div>
+    </MantineProvider>
   );
 };

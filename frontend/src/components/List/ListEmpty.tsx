@@ -1,5 +1,5 @@
 import React from 'react';
-import Text from '@platform-ui/text';
+import { Text } from '@mantine/core';
 
 interface Props {
   text?: string;
@@ -7,5 +7,5 @@ interface Props {
 
 export default function ListEmpty(props: Props) {
   const { text = 'Данных нет' } = props;
-  return <Text size={15}>{text}</Text>;
+  return <Text size="sm">{text}</Text>;
 }

@@ -4,10 +4,10 @@ import type { TGRPCMock } from 'src/mockingbird/models/mock/types';
 import { getPathMock } from 'src/mockingbird/paths';
 import Item from './Item';
 
-interface Props {
+type Props = {
   serviceId: string;
   item: TGRPCMock;
-}
+};
 
 export default function GRPCItem({ serviceId, item }: Props) {
   const { id, name, methodName, scope, times, labels } = item;
