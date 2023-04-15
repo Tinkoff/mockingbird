@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  mongo_express:
+    image: "mongo-express:1.0.0-alpha.4"
+    restart: always
+    ports:
+      - "3001:8081"
+    networks:
+      - app-tier
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=mockingbird
+    ports:
+      - "27017:27017"
+    networks:
+      - app-tier
+  mock:
+    image: "ghcr.io/tinkoff/mockingbird:3.7.2-native"
+    ports:
+      - "8228:8228"
+      - "9000:9000"
+    volumes:
+      # Read the docs about secrets
+      - ./secrets.conf:/opt/mockingbird-native/conf/secrets.conf
+    networks:
+      - app-tier
+    command: -server -Xms256m -Xmx256m -XX:MaxDirectMemorySize=128m -Dconfig.file=/opt/mockingbird-native/qa.conf -Dlog.level=DEBUG -Dlog4j.formatMsgNoLookups=true
+networks:
+  app-tier:
+    driver: bridge

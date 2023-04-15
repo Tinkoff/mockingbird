@@ -1,9 +1,3 @@
-.root {
-  display: flex;
-  flex-flow: column nowrap;
-  justify-content: flex-start;
-}
-
 .content {
   padding-bottom: 24px;
 }

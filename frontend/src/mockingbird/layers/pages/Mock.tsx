@@ -1,10 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { useActions, useStoreSelector } from '@tramvai/state';
 import { useUrl } from '@tramvai/module-router';
-import Button from '@platform-ui/button';
-import Island from '@platform-ui/island';
-import Loader from '@platform-ui/loader';
-import Text from '@platform-ui/text';
+import { Button, Text, Loader, Paper, Title } from '@mantine/core';
 import PageHeader from 'src/components/PageHeader/PageHeader';
 import Error from 'src/components/List/ListError';
 import { selectorAsIs } from 'src/mockingbird/infrastructure/helpers/state';
@@ -20,19 +17,31 @@ import { getPathMocks } from 'src/mockingbird/paths';
 import FormHttp from './mock/FormHttp';
 import FormScenario from './mock/FormScenario';
 import FormGrpc from './mock/FormGrpc';
-import { mapFormDataToStub, mapFormDataToScenario } from './mock/utils';
+import {
+  mapFormDataToStub,
+  mapFormDataToScenario,
+  mapFormDataToGrpc,
+} from './mock/utils';
 import type {
   THTTPFormData,
   TFormCallback,
   TScenarioFormData,
+  TGRPCFormData,
 } from './mock/types';
 
 const TYPES = ['http', 'scenario', 'grpc'];
 
 export default function Mock() {
-  const {
-    query: { service: serviceId, mock: mockId, type },
-  } = useUrl();
+  const url = useUrl();
+  const serviceId = Array.isArray(url.query.service)
+    ? url.query.service[0]
+    : url.query.service;
+  const mockId = Array.isArray(url.query.mock)
+    ? url.query.mock[0]
+    : url.query.mock;
+  const type = Array.isArray(url.query.type)
+    ? url.query.type[0]
+    : url.query.type;
   const basePath = getPathMocks(serviceId);
   const labels = useLabels(serviceId);
 
@@ -41,7 +50,7 @@ export default function Mock() {
   const updateMock = useActions(updateAction);
   const deleteMock = useActions(deleteAction);
   const resetState = useActions(resetMockStateAction);
-  useEffect(() => resetState, [resetState]);
+  useEffect(() => resetState as any, [resetState]);
   useEffect(() => {
     fetchMock({
       id: mockId,
@@ -55,13 +64,26 @@ export default function Mock() {
       type,
     });
   }, [mockId, type, fetchMock]);
+  type TData = THTTPFormData | TScenarioFormData | TGRPCFormData;
   const onUpdate = useCallback(
-    (data: THTTPFormData | TScenarioFormData, callbacks: TFormCallback[]) => {
-      const map = type === 'http' ? mapFormDataToStub : mapFormDataToScenario;
+    (data: TData, callbacks: TFormCallback[] = []) => {
+      let mapFn = (d: any, _serviceId: string, _callbacks: TFormCallback[]) =>
+        d;
+      switch (type) {
+        case 'http':
+          mapFn = mapFormDataToStub;
+          break;
+        case 'scenario':
+          mapFn = mapFormDataToScenario;
+          break;
+        case 'grpc':
+          mapFn = mapFormDataToGrpc;
+          break;
+      }
       updateMock({
         id: mockId,
         type,
-        data: map(data, callbacks, serviceId),
+        data: mapFn(data, serviceId, callbacks),
       });
     },
     [serviceId, mockId, type, updateMock]
@@ -93,22 +115,26 @@ export default function Mock() {
     />
   );
   const actions = (
-    <Island
-      title="Удалить навсегда"
-      text="Мок будет немедленно удален, действие необратимо"
-      flatCorners="true"
-      side={
-        <Button size="m" disabled={status === 'deleting'} onClick={onDelete}>
-          Удалить
-        </Button>
-      }
-    />
+    <Paper>
+      <Title order={4}>Удалить навсегда</Title>
+      <Text size="md" mb="lg">
+        Мок будет немедленно удален, действие необратимо
+      </Text>
+      <Button
+        size="md"
+        variant="outline"
+        disabled={status === 'deleting'}
+        onClick={onDelete}
+      >
+        Удалить
+      </Button>
+    </Paper>
   );
   if (!TYPES.includes(type))
     return (
       <div>
         {pageHeader}
-        <Text size={15} color="red">
+        <Text size="md" color="red">
           Неизвестный тип
         </Text>
       </div>
@@ -116,7 +142,7 @@ export default function Mock() {
   return (
     <div>
       {pageHeader}
-      {status === 'loading' && <Loader size="xxl" centered />}
+      {status === 'loading' && <Loader size="lg" />}
       {status === 'error' && <Error onRetry={handleFetchRetry} />}
       {type === 'http' && mock && (
         <FormHttp
@@ -156,7 +182,7 @@ export default function Mock() {
   );
 }
 
-function formatTitle(type) {
+function formatTitle(type: string) {
   switch (type) {
     case 'http':
       return 'Редактирование HTTP';

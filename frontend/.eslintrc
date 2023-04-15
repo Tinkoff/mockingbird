@@ -3,5 +3,8 @@
         "@tinkoff/eslint-config/app",
         "@tinkoff/eslint-config-react",
         "plugin:@tinkoff/tramvai/recommended"
-    ]
+    ],
+    "rules": {
+        "promise/catch-or-return": "off"
+    }
 }

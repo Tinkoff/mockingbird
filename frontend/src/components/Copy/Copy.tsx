@@ -1,18 +1,19 @@
 import React, { PureComponent } from 'react';
-import CopyIcon from '@platform-ui/iconsPack/interface/24/Copy';
-import Tooltip from '@platform-ui/tooltip';
-import { PortalWrapper } from '@platform-ui/portal';
+import { Tooltip } from '@mantine/core';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore for tree shaking purposes
+import IconCopy from '@tabler/icons-react/dist/esm/icons/IconCopy';
 import copyToClipboard from 'src/infrastructure/helpers/copy-to-clipboard';
 import styles from './Copy.css';
 
-interface State {
+type State = {
   tooltipVisible: boolean;
   message?: string | null;
-}
+};
 
-interface Props {
+type Props = {
   targetValue: string;
-}
+};
 
 const HIDE_AFTER = 1000;
 const ENTER = 13;
@@ -29,10 +30,15 @@ export default class Copy extends PureComponent<Props, State> {
 
   handleCopy = () => {
     if (!this.props.targetValue) return;
-    const selection = window.getSelection().toString();
+    const content = window.getSelection();
+    if (!content) return;
+    const selection = content.toString();
     if (selection.length > 0) return;
     if (this.timer) clearTimeout(this.timer);
-    const last = document.activeElement;
+    const last =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     copyToClipboard(this.props.targetValue, (err) => {
       this.setState({
         tooltipVisible: !err,
@@ -58,26 +64,16 @@ export default class Copy extends PureComponent<Props, State> {
 
   render() {
     return (
-      <PortalWrapper>
-        <button
-          type="button"
-          className={styles.copyButton}
-          onClick={this.handleCopy}
-          onKeyDown={this.handleCopyKeyboard}
-        >
-          <Tooltip
-            popoverContent={this.state.message}
-            direction="top"
-            align="start"
-            smartDirection
-            theme="dark"
-            isActive={this.state.tooltipVisible}
-            isInactive={!this.state.tooltipVisible}
-          >
-            <CopyIcon theme="gray" />
-          </Tooltip>
-        </button>
-      </PortalWrapper>
+      <button
+        type="button"
+        className={styles.copyButton}
+        onClick={this.handleCopy}
+        onKeyDown={this.handleCopyKeyboard}
+      >
+        <Tooltip label={this.state.message} opened={this.state.tooltipVisible}>
+          <IconCopy color="grey" size="1.2rem" />
+        </Tooltip>
+      </button>
     );
   }
 }

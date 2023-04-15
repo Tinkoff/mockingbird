@@ -1,35 +1,38 @@
+import type { ReactNode } from 'react';
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import Accordion from '@platform-ui/accordion';
-import { FormFieldset, FormGroup, FormRow } from '@platform-ui/form';
-import PlatformTextarea from '@platform-ui/textarea';
 import {
-  extractError,
-  validateJSON,
-} from 'src/mockingbird/infrastructure/helpers/forms';
+  Box,
+  Flex,
+  Space,
+  Title,
+  Button,
+  Textarea,
+  Accordion,
+  Group,
+} from '@mantine/core';
 import AttachFile from 'src/mockingbird/components/form/AttachFile';
-import Input from 'src/mockingbird/components/form/Input';
+import { Input } from 'src/mockingbird/components/form/Input';
 import InputCount from 'src/mockingbird/components/form/InputCount';
 import InputSearchTagged from 'src/mockingbird/components/form/InputSearchTagged';
 import Select from 'src/mockingbird/components/form/Select';
-import Textarea from 'src/mockingbird/components/form/Textarea';
-import ButtonSubmit from 'src/mockingbird/components/ButtonSubmit';
-import type { THTTPMock } from 'src/mockingbird/models/mock/types';
+import { InputJson } from 'src/mockingbird/components/form/InputJson';
+import type { TGRPCMock } from 'src/mockingbird/models/mock/types';
 import JSONRequest from './JSONRequest';
 import { mapGrpcToFormData, mapFormDataToGrpc } from './utils';
 import { SCOPES } from './refs';
 import type { TGRPCFormData } from './types';
 
-interface Props {
+type Props = {
   labels: string[];
   serviceId: string;
-  data?: THTTPMock;
-  actions?: React.ReactElement;
+  data?: TGRPCMock;
+  actions?: ReactNode;
   submitText?: string;
   submitDisabled?: boolean;
   disabled?: boolean;
   onSubmit: (data: TGRPCFormData) => void;
-}
+};
 
 export default function FormGrpc(props: Props) {
   const {
@@ -43,13 +46,9 @@ export default function FormGrpc(props: Props) {
     onSubmit: onSubmitParent,
   } = props;
   const defaultValues = mapGrpcToFormData(serviceId, data);
-  const {
-    control,
-    watch,
-    formState: { errors },
-    handleSubmit,
-  } = useForm<TGRPCFormData>({
+  const { control, watch, handleSubmit } = useForm<TGRPCFormData>({
     defaultValues,
+    mode: 'onBlur',
   });
   const scope = watch('scope');
   const onSubmit = useCallback(
@@ -61,179 +60,152 @@ export default function FormGrpc(props: Props) {
   }, [watch, serviceId]);
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <FormRow {...extractError('name', errors)}>
-        <Input
-          name="name"
-          label="Название"
-          control={control}
-          disabled={disabled}
-          required
-        />
-      </FormRow>
-      <FormRow {...extractError('labels', errors)}>
-        <InputSearchTagged
-          name="labels"
-          label="Лейблы"
-          options={labels}
-          control={control}
-          disabled={disabled}
-        />
-      </FormRow>
-      <FormGroup>
-        <FormRow {...extractError('scope', errors)}>
+      <Input
+        name="name"
+        label="Название"
+        control={control as any}
+        disabled={disabled}
+        required
+        mb="sm"
+      />
+      <InputSearchTagged
+        name="labels"
+        label="Лейблы"
+        options={labels}
+        control={control as any}
+        disabled={disabled}
+        mb="sm"
+      />
+      <Flex mb="sm">
+        <Box sx={{ width: '50%' }}>
           <Select
             name="scope"
             label="Время жизни"
             options={SCOPES}
-            control={control}
+            control={control as any}
             disabled={disabled}
             required
           />
-        </FormRow>
-        {scope === 'countdown' && (
-          <FormRow {...extractError('times', errors)}>
+        </Box>
+        <Space w="md" />
+        {scope === 'countdown' ? (
+          <Box sx={{ width: '50%' }}>
             <InputCount
               name="times"
               label="Количество срабатываний"
               min={1}
-              control={control}
+              control={control as any}
               disabled={disabled}
             />
-          </FormRow>
+          </Box>
+        ) : (
+          <Box sx={{ width: '50%' }} />
         )}
-      </FormGroup>
-      <FormRow {...extractError('methodName', errors)}>
-        <Input
-          name="methodName"
-          label="Метод"
-          control={control}
-          disabled={disabled}
+      </Flex>
+      <Input
+        name="methodName"
+        label="Метод"
+        control={control as any}
+        disabled={disabled}
+        required
+        mb="sm"
+      />
+      <Title order={4}>Запрос</Title>
+      {!disabled && (
+        <AttachFile
+          name="requestCodecs"
+          label="Proto файл"
+          control={control as any}
+          single
           required
+          mb="sm"
         />
-      </FormRow>
-      <FormFieldset legend="Запрос">
-        {!disabled && (
-          <FormRow
-            outerLabel="Proto файл"
-            {...extractError('requestCodecs', errors)}
-          >
-            <AttachFile
-              name="requestCodecs"
-              control={control}
-              single
-              required
-            />
-          </FormRow>
-        )}
-        {disabled && (
-          <FormRow>
-            <PlatformTextarea
-              value={watch('requestSchema')}
-              label="Proto схема"
-              rows={15}
-            />
-          </FormRow>
-        )}
-        <FormRow {...extractError('requestClass', errors)}>
-          <Input
-            name="requestClass"
-            label="Класс"
-            control={control}
-            disabled={disabled}
-            required
-          />
-        </FormRow>
-        <FormRow {...extractError('requestPredicates', errors)}>
-          <Textarea
-            name="requestPredicates"
-            label="Предикаты"
-            validate={validateJSON}
-            control={control}
-            disabled={disabled}
-            required
-          />
-        </FormRow>
-      </FormFieldset>
-      <FormFieldset legend="Ответ">
-        {!disabled && (
-          <FormRow
-            outerLabel="Proto файл"
-            {...extractError('responseCodecs', errors)}
-          >
-            <AttachFile
-              name="responseCodecs"
-              control={control}
-              single
-              required
-            />
-          </FormRow>
-        )}
-        {disabled && (
-          <FormRow>
-            <PlatformTextarea
-              value={watch('responseSchema')}
-              label="Proto схема"
-              rows={15}
-            />
-          </FormRow>
-        )}
-        <FormRow {...extractError('responseClass', errors)}>
-          <Input
-            name="responseClass"
-            label="Класс"
-            control={control}
-            disabled={disabled}
-            required
-          />
-        </FormRow>
-        <FormRow {...extractError('response', errors)}>
-          <Textarea
-            name="response"
-            label="Ответ"
-            validate={validateJSON}
-            control={control}
-            disabled={disabled}
-            required
-          />
-        </FormRow>
-      </FormFieldset>
-      <FormRow {...extractError('state', errors)}>
-        <Textarea
-          name="state"
-          label="Предикат для поиска состояния"
-          validate={validateJSON}
-          control={control}
-          disabled={disabled}
-        />
-      </FormRow>
-      <FormRow {...extractError('seed', errors)}>
-        <Textarea
-          name="seed"
-          label="Генерация переменных"
-          validate={validateJSON}
-          control={control}
-          disabled={disabled}
-        />
-      </FormRow>
-      <FormRow>
-        <JSONRequest getValues={onGetValues} />
-      </FormRow>
-      {actions && (
-        <FormRow>
-          <Accordion
-            flatCorners="true"
-            data={[
-              {
-                title: 'Действия',
-                content: actions,
-              },
-            ]}
-          />
-        </FormRow>
       )}
-      <ButtonSubmit disabled={disabled || submitDisabled}>
-        {submitText}
-      </ButtonSubmit>
+      {disabled && (
+        <Textarea
+          value={watch('requestSchema')}
+          label="Proto схема"
+          minRows={15}
+        />
+      )}
+      <Input
+        name="requestClass"
+        label="Класс"
+        control={control as any}
+        disabled={disabled}
+        required
+        mb="sm"
+      />
+      <InputJson
+        name="requestPredicates"
+        label="Предикаты"
+        control={control as any}
+        disabled={disabled}
+        required
+        mb="sm"
+      />
+      <Title order={4}>Ответ</Title>
+      {!disabled && (
+        <AttachFile
+          name="responseCodecs"
+          label="Proto файл"
+          control={control as any}
+          single
+          required
+          mb="sm"
+        />
+      )}
+      {disabled && (
+        <Textarea
+          value={watch('responseSchema')}
+          label="Proto схема"
+          minRows={15}
+        />
+      )}
+      <Input
+        name="responseClass"
+        label="Класс"
+        control={control as any}
+        disabled={disabled}
+        required
+        mb="sm"
+      />
+      <InputJson
+        name="response"
+        label="Ответ"
+        control={control as any}
+        disabled={disabled}
+        required
+        mb="sm"
+      />
+      <InputJson
+        name="state"
+        label="Предикат для поиска состояния"
+        control={control as any}
+        disabled={disabled}
+        mb="sm"
+      />
+      <InputJson
+        name="seed"
+        label="Генерация переменных"
+        control={control as any}
+        disabled={disabled}
+        mb="sm"
+      />
+      <JSONRequest getValues={onGetValues} mb="md" />
+      {actions && (
+        <Accordion variant="contained" mb="md">
+          <Accordion.Item value="actions">
+            <Accordion.Control>Действия</Accordion.Control>
+            <Accordion.Panel>{actions}</Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
+      )}
+      <Group position="right">
+        <Button type="submit" size="md" disabled={disabled || submitDisabled}>
+          {submitText}
+        </Button>
+      </Group>
     </form>
   );
 }

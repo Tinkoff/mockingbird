@@ -12,9 +12,10 @@ import { mapFormDataToDestination } from '../utils';
 import type { DestinationFormData } from '../types';
 
 export default function MockNew() {
-  const {
-    query: { service: serviceId },
-  } = useUrl();
+  const url = useUrl();
+  const serviceId = Array.isArray(url.query.service)
+    ? url.query.service[0]
+    : url.query.service;
   const create = useActions(createAction);
   const { status } = useStoreSelector(createStore, selectorAsIs);
   const onCreate = useCallback(

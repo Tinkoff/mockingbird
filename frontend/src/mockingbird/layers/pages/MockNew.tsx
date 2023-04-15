@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useUrl } from '@tramvai/module-router';
-import { TabsBlockInline } from '@platform-ui/tabsBlock';
+import { SegmentedControl } from '@mantine/core';
 import PageHeader from 'src/components/PageHeader/PageHeader';
 import useLabels from 'src/mockingbird/modules/labels';
 import { getPathMocks } from 'src/mockingbird/paths';
@@ -11,26 +11,33 @@ import styles from './common.css';
 
 const TYPES = [
   {
-    title: 'HTTP',
+    label: 'HTTP',
+    value: 'HTTP',
   },
   {
-    title: 'Scenario',
+    label: 'Scenario',
+    value: 'Scenario',
   },
   {
-    title: 'GRPC',
+    label: 'GRPC',
+    value: 'GRPC',
   },
 ];
 
 export default function MockNew() {
-  const {
-    query: { service: serviceId },
-  } = useUrl();
+  const url = useUrl();
+  const serviceId = Array.isArray(url.query.service)
+    ? url.query.service[0]
+    : url.query.service;
   const labels = useLabels(serviceId);
 
-  const [type, setType] = useState(TYPES[0].title);
-  const onChangeType = useCallback((_, { title }) => {
-    setType(title);
-  }, []);
+  const [type, setType] = useState(TYPES[0].value);
+  const onChangeType = useCallback(
+    (value) => {
+      setType(value);
+    },
+    [setType]
+  );
 
   return (
     <div className={styles.root}>
@@ -39,11 +46,11 @@ export default function MockNew() {
         backText="К списку моков"
         backPath={getPathMocks(serviceId)}
         right={
-          <TabsBlockInline
+          <SegmentedControl
             size="m"
-            activeIndex={TYPES.findIndex((i) => i.title === type)}
-            items={TYPES}
-            onItemClick={onChangeType}
+            value={type}
+            data={TYPES}
+            onChange={onChangeType}
           />
         }
       />

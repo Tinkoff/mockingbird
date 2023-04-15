@@ -10,16 +10,16 @@ import FormGrpc from './FormGrpc';
 import { mapFormDataToGrpc } from './utils';
 import type { TGRPCFormData } from './types';
 
-interface Props {
+type Props = {
   labels: string[];
   serviceId: string;
-}
+};
 
 export default function GrpcNew({ labels, serviceId }: Props) {
   const create = useActions(createAction);
   const { status } = useStoreSelector(createStubStore, selectorAsIs);
   const resetCreateState = useActions(resetCreateStateAction);
-  useEffect(() => resetCreateState, [resetCreateState]);
+  useEffect(() => resetCreateState as any, [resetCreateState]);
 
   const onCreate = useCallback(
     (formData: TGRPCFormData) => {

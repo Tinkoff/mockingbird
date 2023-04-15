@@ -4,10 +4,10 @@ import type { THTTPMock } from 'src/mockingbird/models/mock/types';
 import { getPathMock } from 'src/mockingbird/paths';
 import Item from './Item';
 
-interface Props {
+type Props = {
   serviceId: string;
   item: THTTPMock;
-}
+};
 
 export default function HTTPMock({ serviceId, item }: Props) {
   const { id, name, method, path, pathPattern, scope, times, labels } = item;

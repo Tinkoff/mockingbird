@@ -1,64 +1,77 @@
 import React from 'react';
-import type { BadgeProps } from '@platform-ui/badge';
-import Badge from '@platform-ui/badge';
-import Island from '@platform-ui/island';
-import Text from '@platform-ui/text';
+import { Paper, Text, Chip, Anchor } from '@mantine/core';
 import pluralize from 'src/mockingbird/infrastructure/pluralize';
 import styles from './Item.css';
 
-interface Props {
+type Props = {
   name: string;
   description: string;
   scope: string;
-  times: number;
+  times?: number;
   labels: string[];
   onClick: () => void;
-}
+};
 
 export default function Item(props: Props) {
   // [удалить] хак с [] - лейблов для сценариев пока нет
   const { onClick, name, description, scope, times, labels = [] } = props;
   return (
-    <Island clickable onClick={onClick}>
+    <Paper onClick={onClick} shadow="xs">
       <div className={styles.root}>
         <div className={styles.block}>
-          <Text size={17}>{name}</Text>
-          <Text size={13}>{description}</Text>
+          <Anchor size="md">{name}</Anchor>
+          <Text size="sm">{description}</Text>
         </div>
         <div className={styles.block}>
-          <Text size={17}>{getScopeText(scope, times)}</Text>
+          <Text size="md">{getScopeText(scope, times)}</Text>
           <div className={styles.tags}>
             {labels.map((label) => (
-              <Badge size="m" key={label} color={getBadgeColor(label)}>
+              <Chip size="xs" key={label} color={getBadgeColor(label)}>
                 {label}
-              </Badge>
+              </Chip>
             ))}
           </div>
         </div>
       </div>
-    </Island>
+    </Paper>
   );
 }
 
-function getScopeText(scope: string, times: number) {
+function getScopeText(scope: string, times?: number) {
   if (scope === 'persistent') return 'Вечный';
   if (scope === 'ephemeral') return 'Эфемерный';
-  if (scope === 'countdown') {
+  if (scope === 'countdown' && typeof times === 'number') {
     return `Осталось ${pluralize(times, 'вызов', 'вызова', 'вызовов')}`;
   }
   return '';
 }
 
-const BADGE_COLORS: BadgeProps['color'][] = [
-  'onLight',
+type DefaultMantineColor =
+  | 'dark'
+  | 'gray'
+  | 'red'
+  | 'pink'
+  | 'grape'
+  | 'violet'
+  | 'indigo'
+  | 'blue'
+  | 'cyan'
+  | 'green'
+  | 'lime'
+  | 'yellow'
+  | 'orange'
+  | 'teal';
+
+const BADGE_COLORS: DefaultMantineColor[] = [
+  'violet',
   'blue',
   'gray',
   'green',
   'yellow',
-  'whiteBlock',
+  'teal',
   'red',
-  'lightBlue',
-  'highlight',
+  'cyan',
+  'orange',
 ];
 
 function getBadgeColor(text: string) {

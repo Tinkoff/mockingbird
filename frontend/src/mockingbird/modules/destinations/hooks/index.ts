@@ -18,7 +18,7 @@ export function useDestinations(serviceId: string) {
 
 export function mapSelectItem({ name: value, description }: Destination) {
   return {
-    title: value,
+    label: value,
     description,
     value,
   };

@@ -17,3 +17,5 @@ scalafix-commons.conf
 .sbt-cache
 node_modules
 dist
+.fleet
+secrets.conf
