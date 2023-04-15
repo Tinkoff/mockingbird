@@ -1,6 +1,5 @@
 import React from 'react';
-import Link from '@platform-ui/link';
-import Text from '@platform-ui/text';
+import { Text, Button } from '@mantine/core';
 
 interface Props {
   text?: string;
@@ -8,11 +7,15 @@ interface Props {
 }
 
 export default function ListError(props: Props) {
-  const { text = 'Ошибка при загрузке данных. ', onRetry } = props;
+  const { text = 'Ошибка при загрузке данных ', onRetry } = props;
   return (
-    <Text size={15} color="red">
+    <Text size="sm" color="red">
       {text}
-      {onRetry && <Link onClick={onRetry}>Попробовать снова</Link>}
+      {onRetry && (
+        <Button variant="subtle" compact onClick={onRetry}>
+          Попробовать снова
+        </Button>
+      )}
     </Text>
   );
 }

@@ -18,7 +18,7 @@ export function useSources(serviceId: string) {
 
 export function mapSelectItem({ name: value, description }: Source) {
   return {
-    title: value,
+    label: value,
     description,
     value,
   };

@@ -7,16 +7,4 @@
   cursor: pointer;
   width: 24px;
   height: 24px;
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.copyButton:hover,
-.copyButton:focus {
-  svg {
-    color: #9299a2;
-  }
 }

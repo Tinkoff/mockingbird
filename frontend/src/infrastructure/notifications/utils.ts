@@ -1,7 +1,3 @@
-import {
-  successToast,
-  errorToast,
-} from 'src/mockingbird/infrastructure/helpers/toast';
 import { extractError } from 'src/mockingbird/infrastructure/helpers/state';
 import { addToast } from './store/store';
 
@@ -29,7 +25,23 @@ function getErrorToast(title: string, e: any) {
   return addToast(
     errorToast({
       title,
-      children: e ? extractError(e) : undefined,
+      description: e ? extractError(e) : undefined,
     })
   );
+}
+
+function successToast(item: any) {
+  return {
+    type: 'success',
+    timer: 3000,
+    ...item,
+  };
+}
+
+function errorToast(item: any) {
+  return {
+    type: 'error',
+    timer: 5000,
+    ...item,
+  };
 }
