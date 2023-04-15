@@ -1,51 +1,68 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import Text from '@platform-ui/text';
-import Textarea from '@platform-ui/textarea';
-import Toggle from '@platform-ui/toggle';
+import type { BoxProps } from '@mantine/core';
+import { Switch, Text, JsonInput, Box } from '@mantine/core';
 import Copy from 'src/components/Copy/Copy';
 import { stringifyJSON } from 'src/mockingbird/infrastructure/utils/forms';
 import styles from './JSONRequest.css';
 
-interface Props {
-  getValues: () => string | Promise<string>;
-}
+type Props = BoxProps & {
+  getValues: () => Record<string, any> | Promise<string>;
+};
 
-export default function JSONRequest({ getValues }: Props) {
+export default function JSONRequest({ getValues, ...restProps }: Props) {
   const [show, setShow] = useState(false);
   const handleChange = useCallback(
-    (_, { checked }) => {
-      setShow(checked);
-    },
+    (e) => setShow(e.currentTarget.checked),
     [setShow]
   );
   return (
-    <div>
+    <Box {...restProps}>
       <div className={styles.header}>
-        <Text size={17}>Показать как JSON</Text>
-        <Toggle checked={show} onChange={handleChange} />
+        <Text size="md">Показать как JSON</Text>
+        <Switch
+          label=""
+          checked={show}
+          onChange={handleChange}
+          labelPosition="left"
+        />
       </div>
       {show && (
         <div className={styles.description}>
-          <Text size={15} color="grey">
+          <Text color="grey" size="xs">
             Чтобы ваш МОК наверняка работал, рекомендуем предварительно
             сохранить, если вы вносили правки
           </Text>
         </div>
       )}
       {show && <JSONViewer value={getValues()} />}
+    </Box>
+  );
+}
+
+function JSONViewer({ value }: { value: ReturnType<Props['getValues']> }) {
+  const [v, setValue] = useState('');
+  useEffect(() => {
+    if (isPromise(value)) {
+      value.then((val) => setValue(stringifyJSON(val)));
+    } else {
+      setValue(stringifyJSON(value));
+    }
+  }, [value, setValue]);
+  return (
+    <div className={styles.json}>
+      <JsonInput
+        value={v}
+        rightSection={
+          <Box sx={{ marginTop: '0.625rem', alignSelf: 'flex-start' }}>
+            <Copy targetValue={v} />
+          </Box>
+        }
+        minRows={16}
+      />
     </div>
   );
 }
 
-function JSONViewer({ value }: { value: string | Promise<string> }) {
-  const [v, setValue] = useState('');
-  useEffect(() => {
-    if (value.then) value.then((val) => setValue(stringifyJSON(val)));
-    else setValue(stringifyJSON(value));
-  }, [value, setValue]);
-  return (
-    <div className={styles.json}>
-      <Textarea value={v} rightContent={<Copy targetValue={v} />} rows={16} />
-    </div>
-  );
+function isPromise<T>(p: any): p is Promise<T> {
+  return Boolean(p && typeof p.then === 'function');
 }

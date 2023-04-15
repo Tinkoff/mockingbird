@@ -3,7 +3,7 @@ import type { Props as SelectProps } from 'src/mockingbird/components/form/Selec
 import Select from 'src/mockingbird/components/form/Select';
 import { useSources } from '../hooks';
 
-type Props = SelectProps & {
+type Props = Omit<SelectProps, 'options'> & {
   serviceId: string;
 };
 

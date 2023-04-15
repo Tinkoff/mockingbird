@@ -3,6 +3,7 @@
   justify-content: space-between;
   padding: 16px;
   word-break: break-word;
+  cursor: pointer;
 }
 
 .block {
@@ -18,7 +19,11 @@
 }
 
 .tags {
-  & > * + * {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 30rem;
+
+  & > * {
     margin-left: 4px;
   }
 }

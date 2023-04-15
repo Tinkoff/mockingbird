@@ -1,21 +1,29 @@
 import React, { useCallback, useState } from 'react';
-import Button from '@platform-ui/button';
-import { Int16Plus, Int16Close } from '@platform-ui/iconsPack';
-import Island from '@platform-ui/island';
-import generateId from '@platform-ui/generateId';
-import Text from '@platform-ui/text';
+import type { BoxProps } from '@mantine/core';
+import { Box, Button, Text, Paper, Flex } from '@mantine/core';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore for tree shaking purposes
+import IconPlus from '@tabler/icons-react/dist/esm/icons/IconPlus';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore for tree shaking purposes
+import IconTrash from '@tabler/icons-react/dist/esm/icons/IconTrash';
 import { parseJSON } from 'src/mockingbird/infrastructure/utils/forms';
 import CallbackPopup from './CallbackPopup';
 import type { TFormCallback } from './types';
 import styles from './Callbacks.css';
 
-interface Props {
+type Props = BoxProps & {
   serviceId: string;
   callbacks: TFormCallback[];
   onChange: (callbacks: TFormCallback[]) => void;
-}
+};
 
-export default function Callbacks({ serviceId, callbacks, onChange }: Props) {
+export default function Callbacks({
+  serviceId,
+  callbacks,
+  onChange,
+  ...restProps
+}: Props) {
   const [index, setIndex] = useState(-1);
   const handleCreate = useCallback(() => {
     setIndex(callbacks.length);
@@ -32,7 +40,7 @@ export default function Callbacks({ serviceId, callbacks, onChange }: Props) {
     (callback: TFormCallback) => {
       const result = [...callbacks];
       result[index] = callback;
-      if (!result[index].id) result[index].id = generateId();
+      if (!result[index].id) result[index].id = window.crypto.randomUUID();
       onChange(result);
       setIndex(-1);
     },
@@ -42,16 +50,12 @@ export default function Callbacks({ serviceId, callbacks, onChange }: Props) {
     setIndex(-1);
   }, []);
   return (
-    <div>
+    <Box {...restProps}>
       <div className={styles.header}>
-        <Text size={17}>Коллбэки</Text>
-        <Button
-          size="s"
-          theme="outlineDark"
-          icon={Int16Plus}
-          onClick={handleCreate}
-          round
-        />
+        <Text size="md">Коллбэки</Text>
+        <Button size="sm" variant="outline" onClick={handleCreate} compact>
+          <IconPlus size="1rem" />
+        </Button>
       </div>
       {callbacks.length > 0 && (
         <div className={styles.items}>
@@ -74,7 +78,7 @@ export default function Callbacks({ serviceId, callbacks, onChange }: Props) {
           onClose={handleClose}
         />
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -97,20 +101,14 @@ function CallbackItem({ callback, index, onEdit, onDelete }: ItemProps) {
     [index, onDelete]
   );
   return (
-    <Island
-      title={formatTitle(callback)}
-      clickable
-      onClick={handleClick}
-      side={
-        <Button
-          size="xs"
-          theme="outlineDark"
-          icon={Int16Close}
-          onClick={handleDelete}
-          round
-        />
-      }
-    />
+    <Paper shadow="xs" p="md" onClick={handleClick}>
+      <Flex align="center" justify="space-between">
+        <Text size="md">{formatTitle(callback)}</Text>
+        <Button size="xs" variant="outline" onClick={handleDelete} compact>
+          <IconTrash size="1rem" />
+        </Button>
+      </Flex>
+    </Paper>
   );
 }
 

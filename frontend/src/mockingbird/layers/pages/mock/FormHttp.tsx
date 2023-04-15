@@ -1,18 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import Accordion from '@platform-ui/accordion';
-import { FormGroup, FormRow } from '@platform-ui/form';
-import {
-  extractError,
-  validateJSON,
-} from 'src/mockingbird/infrastructure/helpers/forms';
-import Input from 'src/mockingbird/components/form/Input';
+import { Flex, Box, Space, Button, Accordion } from '@mantine/core';
+import { Input } from 'src/mockingbird/components/form/Input';
 import InputCount from 'src/mockingbird/components/form/InputCount';
 import InputSearchTagged from 'src/mockingbird/components/form/InputSearchTagged';
 import Select from 'src/mockingbird/components/form/Select';
-import Textarea from 'src/mockingbird/components/form/Textarea';
+import { InputJson } from 'src/mockingbird/components/form/InputJson';
 import ToggleBlock from 'src/mockingbird/components/form/ToggleBlock';
-import ButtonSubmit from 'src/mockingbird/components/ButtonSubmit';
 import type { THTTPMock } from 'src/mockingbird/models/mock/types';
 import Callbacks from './Callbacks';
 import JSONRequest from './JSONRequest';
@@ -20,7 +14,7 @@ import { mapStubToFormData, mapFormDataToStub } from './utils';
 import { SCOPES, METHODS } from './refs';
 import type { THTTPFormData, TFormCallback } from './types';
 
-interface Props {
+type Props = {
   labels: string[];
   serviceId: string;
   data?: THTTPMock;
@@ -28,7 +22,7 @@ interface Props {
   submitText?: string;
   submitDisabled?: boolean;
   onSubmit: (data: THTTPFormData, callbacks: TFormCallback[]) => void;
-}
+};
 
 export default function FormHttp(props: Props) {
   const {
@@ -45,13 +39,9 @@ export default function FormHttp(props: Props) {
     data
   );
   const [callbacks, setCallbacks] = useState<TFormCallback[]>(defaultCallbacks);
-  const {
-    control,
-    watch,
-    formState: { errors },
-    handleSubmit,
-  } = useForm<THTTPFormData>({
+  const { control, watch, handleSubmit } = useForm<THTTPFormData>({
     defaultValues,
+    mode: 'onBlur',
   });
   const scope = watch('scope');
   const onSubmit = useCallback(
@@ -59,132 +49,123 @@ export default function FormHttp(props: Props) {
     [callbacks, onSubmitParent]
   );
   const onGetValues = useCallback(() => {
-    return mapFormDataToStub(watch(), callbacks, serviceId);
+    return mapFormDataToStub(watch(), serviceId, callbacks);
   }, [watch, callbacks, serviceId]);
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <FormRow {...extractError('name', errors)}>
-        <Input name="name" label="Название" control={control} required />
-      </FormRow>
-      <FormRow {...extractError('labels', errors)}>
-        <InputSearchTagged
-          name="labels"
-          label="Лейблы"
-          options={labels}
-          control={control}
-        />
-      </FormRow>
-      <FormGroup>
-        <FormRow {...extractError('scope', errors)}>
+      <Input
+        name="name"
+        label="Название"
+        control={control as any}
+        required
+        mb="sm"
+      />
+      <InputSearchTagged
+        name="labels"
+        label="Лейблы"
+        options={labels}
+        control={control as any}
+        mb="sm"
+      />
+      <Flex mb="sm">
+        <Box sx={{ width: '50%' }}>
           <Select
             name="scope"
             label="Время жизни"
             options={SCOPES}
-            control={control}
+            control={control as any}
             required
           />
-        </FormRow>
-        {scope === 'countdown' && (
-          <FormRow {...extractError('times', errors)}>
+        </Box>
+        <Space w="md" />
+        {scope === 'countdown' ? (
+          <Box sx={{ width: '50%' }}>
             <InputCount
               name="times"
               label="Количество срабатываний"
               min={1}
-              control={control}
+              control={control as any}
             />
-          </FormRow>
+          </Box>
+        ) : (
+          <Box sx={{ width: '50%' }} />
         )}
-      </FormGroup>
-      <FormRow {...extractError('method', errors)}>
-        <Select
-          name="method"
-          label="Метод"
-          options={METHODS}
-          control={control}
+      </Flex>
+      <Select
+        name="method"
+        label="Метод"
+        options={METHODS}
+        control={control as any}
+        required
+        mb="sm"
+      />
+      <Flex mb="sm" align="flex-start">
+        <Input
+          name="path"
+          label="Путь"
+          control={control as any}
           required
+          description={`Без префикса /${serviceId}. Пример: /demo`}
         />
-      </FormRow>
-      <FormGroup>
-        <FormRow
-          {...extractError('path', errors)}
-          message={`Без префикса /${serviceId}. Пример: /demo`}
-        >
-          <Input name="path" label="Путь" control={control} required />
-        </FormRow>
-        <FormRow>
-          <ToggleBlock
-            name="isPathPattern"
-            label="Путь-регулярка"
-            control={control}
-          />
-        </FormRow>
-      </FormGroup>
-      <FormRow {...extractError('request', errors)}>
-        <Textarea
-          name="request"
-          label="Запрос"
-          validate={validateJSON}
-          control={control}
-          required
+        <ToggleBlock
+          name="isPathPattern"
+          label="Путь-регулярка"
+          control={control as any}
+          mb="xs"
+          ml="md"
+          mt="3.125rem"
         />
-      </FormRow>
-      <FormRow {...extractError('response', errors)}>
-        <Textarea
-          name="response"
-          label="Ответ"
-          validate={validateJSON}
-          control={control}
-          required
-        />
-      </FormRow>
-      <FormRow {...extractError('state', errors)}>
-        <Textarea
-          name="state"
-          label="Предикат для поиска состояния"
-          validate={validateJSON}
-          control={control}
-        />
-      </FormRow>
-      <FormRow {...extractError('persist', errors)}>
-        <Textarea
-          name="persist"
-          label="Данные, записываемые в базу"
-          validate={validateJSON}
-          control={control}
-        />
-      </FormRow>
-      <FormRow {...extractError('seed', errors)}>
-        <Textarea
-          name="seed"
-          label="Генерация переменных"
-          validate={validateJSON}
-          control={control}
-        />
-      </FormRow>
-      <FormRow>
-        <Callbacks
-          serviceId={serviceId}
-          callbacks={callbacks}
-          onChange={setCallbacks}
-        />
-      </FormRow>
-      <FormRow>
-        <JSONRequest getValues={onGetValues} />
-      </FormRow>
+      </Flex>
+      <InputJson
+        name="request"
+        label="Запрос"
+        control={control as any}
+        required
+        mb="sm"
+      />
+      <InputJson
+        name="response"
+        label="Ответ"
+        control={control as any}
+        required
+        mb="sm"
+      />
+      <InputJson
+        name="state"
+        label="Предикат для поиска состояния"
+        control={control as any}
+        mb="sm"
+      />
+      <InputJson
+        name="persist"
+        label="Данные, записываемые в базу"
+        control={control as any}
+        mb="sm"
+      />
+      <InputJson
+        name="seed"
+        label="Генерация переменных"
+        control={control as any}
+        mb="sm"
+      />
+      <Callbacks
+        serviceId={serviceId}
+        callbacks={callbacks}
+        onChange={setCallbacks}
+        mb="md"
+      />
+      <JSONRequest getValues={onGetValues} mb="md" />
       {actions && (
-        <FormRow>
-          <Accordion
-            flatCorners="true"
-            data={[
-              {
-                title: 'Действия',
-                content: actions,
-              },
-            ]}
-          />
-        </FormRow>
+        <Accordion variant="contained" mb="md">
+          <Accordion.Item value="actions">
+            <Accordion.Control>Действия</Accordion.Control>
+            <Accordion.Panel>{actions}</Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
       )}
-      <ButtonSubmit disabled={submitDisabled}>{submitText}</ButtonSubmit>
+      <Button type="submit" size="md" disabled={submitDisabled}>
+        {submitText}
+      </Button>
     </form>
   );
 }
