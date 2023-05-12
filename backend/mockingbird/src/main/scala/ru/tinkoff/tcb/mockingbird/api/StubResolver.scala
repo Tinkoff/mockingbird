@@ -88,8 +88,11 @@ final class StubResolver(stubDAO: HttpStubDAO[Task], stateDAO: PersistentStateDA
             mtch    <- pattern.findFirstMatchIn(path)
           } yield pattern.groups.map(g => g -> mtch.group(g)).to(Map)
           val segments = groups.map(segs => Json.fromFields(segs.view.mapValues(Json.fromString))).getOrElse(Json.Null)
+          val headerJsonMap = Json.fromFields(headers.view.mapValues(Json.fromString))
           computeStateSpec(
-            stubc.state.map(_.fill(Json.obj("__query" -> queryObject, "__segments" -> segments))),
+            stubc.state.map(
+              _.fill(Json.obj("__query" -> queryObject, "__segments" -> segments, "__headers" -> headerJsonMap))
+            ),
             bodyJson,
             bodyXml
           )
