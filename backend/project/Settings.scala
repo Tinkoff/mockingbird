@@ -2,7 +2,7 @@ import scalafix.sbt.ScalafixPlugin.autoImport._
 
 import ProjectKeys._
 import ch.epfl.scala.sbtmissinglink.MissingLinkPlugin.autoImport._
-import com.typesafe.sbt.SbtGit.git
+import com.github.sbt.git.SbtGit.git
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport._
 import com.typesafe.sbt.packager.docker._
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport._
@@ -106,8 +106,8 @@ object Settings {
     import com.typesafe.sbt.packager.Keys._
     import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.{daemonUser, defaultLinuxInstallLocation}
     import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport.Universal
-    import com.typesafe.sbt.GitVersioning
-    import com.typesafe.sbt.SbtGit.git
+    import com.github.sbt.git.GitVersioning
+    import com.github.sbt.git.SbtGit.git
 
     prj
       .enablePlugins(GitVersioning, DockerPlugin, LauncherJarPlugin)
@@ -163,8 +163,8 @@ object Settings {
     import com.typesafe.sbt.packager.Keys._
     import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.{daemonUser, defaultLinuxInstallLocation}
     import com.typesafe.sbt.packager.graalvmnativeimage.GraalVMNativeImagePlugin.autoImport._
-    import com.typesafe.sbt.GitVersioning
-    import com.typesafe.sbt.SbtGit.git
+    import com.github.sbt.git.GitVersioning
+    import com.github.sbt.git.SbtGit.git
 
     val dockerBasePath = "/opt/docker/bin"
 
