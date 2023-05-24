@@ -1,44 +1,59 @@
 import React, { useCallback } from 'react';
 import type { Control } from 'react-hook-form';
 import { useController } from 'react-hook-form';
-import PlatformAttachFile from '@platform-ui/attachFile';
+import type { FileInputProps } from '@mantine/core';
+import { FileInput } from '@mantine/core';
+import { extractError } from 'src/mockingbird/infrastructure/helpers/forms';
 
-interface Props {
+type Props = FileInputProps & {
   name: string;
   control: Control;
   required?: boolean;
   single?: boolean;
-}
+};
 
 export default function AttachFile(props: Props) {
-  const { name, control, required = false, single = false } = props;
-  const { field } = useController({
+  const {
+    name,
+    control,
+    required = false,
+    single = false,
+    ...restProps
+  } = props;
+  const { field, formState, fieldState } = useController({
     name,
     control,
     rules: {
       required,
     },
   });
-  const { value, onChange } = field;
-  const onAdd = useCallback(
-    (_, { files }) => {
-      onChange(files.map((f) => ({ ...f, status: 'success' })));
+  const { onChange: onChangeField } = field;
+  const onChange = useCallback(
+    (value: File | File[]) => {
+      if (Array.isArray(value)) {
+        onChangeField(value);
+      } else {
+        onChangeField([value]);
+      }
     },
-    [onChange]
+    [onChangeField]
   );
-  const handleRemove = useCallback(
-    (_, { file }) => {
-      onChange(value.filter((f) => f !== file));
-    },
-    [onChange, value]
-  );
+  const defaultPlaceholder = single ? 'Выберите файл' : 'Выберите файлы';
+  const uiPlaceholder = restProps.placeholder || defaultPlaceholder;
+  const uiError =
+    extractError(name, formState.errors) || fieldState.error?.message;
+  const uiValue = single ? field.value && field.value[0] : field.value;
   return (
-    <PlatformAttachFile
+    <FileInput
+      {...restProps}
       {...field}
-      files={value}
-      single={single}
-      onAdd={onAdd}
-      onRemove={handleRemove}
+      value={uiValue}
+      error={uiError}
+      onChange={onChange}
+      placeholder={uiPlaceholder}
+      required={required}
+      multiple={!single}
+      clearable
     />
   );
 }

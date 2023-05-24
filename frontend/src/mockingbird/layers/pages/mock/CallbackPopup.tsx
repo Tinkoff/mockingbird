@@ -1,17 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import type { FieldErrors, Control, WatchInternal } from 'react-hook-form';
+import type { Control, WatchInternal } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
-import Button from '@platform-ui/button';
-import { FormFieldset, FormRow } from '@platform-ui/form';
-import Popup from '@platform-ui/popup';
-import {
-  extractError,
-  validateJSON,
-} from 'src/mockingbird/infrastructure/helpers/forms';
+import { Modal as Popup, Button, Group } from '@mantine/core';
+import { InputJson } from 'src/mockingbird/components/form/InputJson';
 import Destinations from 'src/mockingbird/modules/destinations';
-import Input from 'src/mockingbird/components/form/Input';
+import { Input } from 'src/mockingbird/components/form/Input';
 import Select from 'src/mockingbird/components/form/Select';
-import Textarea from 'src/mockingbird/components/form/Textarea';
 import {
   CALLBACK_TYPES,
   CALLBACK_HTTP_RESPONSE_TYPES,
@@ -19,14 +13,14 @@ import {
   DEFAULT_CALLBACK_MESSAGE,
 } from './refs';
 import type { TFormCallback } from './types';
-import styles from './CallbackPopup.css';
 
-interface Props {
+type Props = {
   serviceId: string;
-  callback?: TFormCallback;
   onSave: (callback: TFormCallback) => void;
   onClose: () => void;
-}
+  // eslint-disable-next-line react/no-unused-prop-types
+  callback?: TFormCallback;
+};
 
 export default function CallbackPopup({
   callback,
@@ -39,9 +33,12 @@ export default function CallbackPopup({
   );
   const Form = type === 'http' ? HTTPForm : MessageForm;
   const onChangeType = useCallback((t) => setType(t), []);
+  const edit = Boolean(callback);
+  const title = edit ? 'Редактирование коллбэка' : 'Создание коллбэка';
   return (
-    <Popup opened onClose={onClose}>
+    <Popup size="lg" opened onClose={onClose} title={title}>
       <Form
+        edit={edit}
         callback={callback}
         serviceId={serviceId}
         onChangeType={onChangeType}
@@ -53,6 +50,7 @@ export default function CallbackPopup({
 }
 
 type FormProps = Props & {
+  edit: boolean;
   onChangeType: (type: string) => void;
 };
 
@@ -61,7 +59,6 @@ function HTTPForm({ callback, ...props }: FormProps) {
   return (
     <FormBase
       {...props}
-      edit={Boolean(callback)}
       defaultType="http"
       defaultValues={defaultValues}
       Fields={MTTPFormFields}
@@ -69,37 +66,24 @@ function HTTPForm({ callback, ...props }: FormProps) {
   );
 }
 
-function MTTPFormFields({ control, watch, errors }: FieldsProps) {
+function MTTPFormFields({ control, watch }: FieldsProps) {
   const responseMode = watch('responseMode');
   return (
     <>
-      <FormRow {...extractError('request', errors)}>
-        <Textarea
-          name="request"
-          label="Запрос"
-          validate={validateJSON}
+      <InputJson name="request" label="Запрос" control={control} required />
+      <Select
+        name="responseMode"
+        label="Тип ответа"
+        options={CALLBACK_HTTP_RESPONSE_TYPES}
+        control={control}
+      />
+      {responseMode && (
+        <InputJson
+          name="persist"
+          label="Данные, записываемые в базу"
           control={control}
           required
         />
-      </FormRow>
-      <FormRow {...extractError('responseMode', errors)}>
-        <Select
-          name="responseMode"
-          label="Тип ответа"
-          options={CALLBACK_HTTP_RESPONSE_TYPES}
-          control={control}
-        />
-      </FormRow>
-      {responseMode && (
-        <FormRow {...extractError('persist', errors)}>
-          <Textarea
-            name="persist"
-            label="Данные, записываемые в базу"
-            validate={validateJSON}
-            control={control}
-            required
-          />
-        </FormRow>
       )}
     </>
   );
@@ -110,7 +94,6 @@ function MessageForm({ callback, ...props }: FormProps) {
   return (
     <FormBase
       {...props}
-      edit={Boolean(callback)}
       defaultType="message"
       defaultValues={defaultValues}
       Fields={MessageFormFields}
@@ -118,35 +101,26 @@ function MessageForm({ callback, ...props }: FormProps) {
   );
 }
 
-function MessageFormFields({ control, errors, serviceId }: FieldsProps) {
+function MessageFormFields({ control, serviceId }: FieldsProps) {
   return (
     <>
-      <FormRow {...extractError('destination', errors)}>
-        <Destinations
-          name="destination"
-          label="Получатель событий"
-          serviceId={serviceId}
-          control={control}
-          required
-        />
-      </FormRow>
-      <FormRow {...extractError('output', errors)}>
-        <Textarea
-          name="output"
-          label="Ответ"
-          validate={validateJSON}
-          control={control}
-          required
-        />
-      </FormRow>
+      <Destinations
+        name="destination"
+        label="Получатель событий"
+        serviceId={serviceId}
+        control={control}
+        required
+      />
+      <InputJson name="output" label="Ответ" control={control} required />
     </>
   );
 }
 
 type FieldsProps = {
-  errors: FieldErrors;
+  // eslint-disable-next-line react/no-unused-prop-types
   watch: WatchInternal<any>;
   control: Control;
+  // eslint-disable-next-line react/no-unused-prop-types
   serviceId: string;
 };
 
@@ -154,7 +128,7 @@ type FormBaseProps = FormProps & {
   edit: boolean;
   Fields: React.FC<FieldsProps>;
   defaultType: string;
-  defaultValues: TFormCallback;
+  defaultValues: Partial<TFormCallback>;
 };
 
 function FormBase(props: FormBaseProps) {
@@ -168,13 +142,9 @@ function FormBase(props: FormBaseProps) {
     onSave,
     onClose,
   } = props;
-  const {
-    control,
-    watch,
-    formState: { errors },
-    handleSubmit,
-  } = useForm<TFormCallback>({
+  const { control, watch, handleSubmit } = useForm<TFormCallback>({
     defaultValues,
+    mode: 'onBlur',
   });
   const type = watch('type');
   useEffect(() => {
@@ -189,40 +159,30 @@ function FormBase(props: FormBaseProps) {
   );
   return (
     <form onSubmit={onSubmit}>
-      <FormFieldset
-        legend={edit ? 'Редактирование коллбэка' : 'Создание коллбэка'}
-      >
-        <FormRow {...extractError('type', errors)}>
-          <Select
-            name="type"
-            label="Тип"
-            options={CALLBACK_TYPES}
-            control={control}
-            disabled={edit}
-            required
-          />
-        </FormRow>
-        <Fields
-          control={control}
-          watch={watch}
-          errors={errors}
-          serviceId={serviceId}
-        />
-        <FormRow
-          {...extractError('delay', errors)}
-          message="Паттерн: d+ (d|day|h|hour|m|min|minute|s|sec|second|ms|milli|millisecond|µs|micro|microsecond|ns|nano|nanosecond)"
-        >
-          <Input name="delay" label="Задержка" control={control} />
-        </FormRow>
-      </FormFieldset>
-      <div className={styles.buttons}>
-        <Button size="l" type="submit">
+      <Select
+        name="type"
+        label="Тип"
+        options={CALLBACK_TYPES}
+        control={control as any}
+        disabled={edit}
+        required
+      />
+      <Fields control={control as any} watch={watch} serviceId={serviceId} />
+      <Input
+        name="delay"
+        label="Задержка"
+        description="Паттерн: d+ (d|day|h|hour|m|min|minute|s|sec|second|ms|milli|millisecond|µs|micro|microsecond|ns|nano|nanosecond)"
+        control={control as any}
+        mb="lg"
+      />
+      <Group>
+        <Button size="md" type="submit">
           {edit ? 'Сохранить' : 'Создать'}
         </Button>
-        <Button size="l" theme="secondary" onClick={onClose}>
+        <Button size="md" variant="outline" onClick={onClose}>
           Отмена
         </Button>
-      </div>
+      </Group>
     </form>
   );
 }

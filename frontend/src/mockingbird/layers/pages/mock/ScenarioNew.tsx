@@ -10,22 +10,22 @@ import FormScenario from './FormScenario';
 import { mapFormDataToScenario } from './utils';
 import type { TFormCallback, TScenarioFormData } from './types';
 
-interface Props {
+type Props = {
   labels: string[];
   serviceId: string;
-}
+};
 
 export default function ScenarioNew({ labels, serviceId }: Props) {
   const create = useActions(createAction);
   const { status } = useStoreSelector(createStubStore, selectorAsIs);
   const resetCreateState = useActions(resetCreateStateAction);
-  useEffect(() => resetCreateState, [resetCreateState]);
+  useEffect(() => resetCreateState as any, [resetCreateState]);
 
   const onCreate = useCallback(
     (data: TScenarioFormData, callbacks: TFormCallback[]) => {
       create({
         type: 'scenario',
-        data: mapFormDataToScenario(data, callbacks, serviceId),
+        data: mapFormDataToScenario(data, serviceId, callbacks),
         serviceId,
       });
     },

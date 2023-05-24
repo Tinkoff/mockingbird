@@ -2,7 +2,7 @@ import { createReducer, createEvent } from '@tramvai/state';
 import type { Mock } from '../../mock/types';
 
 type Type = 'http' | 'scenario';
-type MocksState = {
+export type MocksState = {
   status:
     | 'none'
     | 'loading'

@@ -1,13 +1,8 @@
 import type { FieldErrors, FieldError } from 'react-hook-form';
 
-export function extractError(name: string, errors: FieldErrors) {
+export function extractError(name: string, errors: FieldErrors): string | null {
   const error = errors[name];
-  const errorMessage = getErrorMessage(error);
-  if (!errorMessage) return null;
-  return {
-    error: true,
-    errorMessage,
-  };
+  return getErrorMessage(error) || null;
 }
 
 function getErrorMessage(error: FieldError) {
@@ -47,7 +42,7 @@ function isObject(item: any) {
 
 export function mapSelectItem(value: string) {
   return {
-    title: value,
+    label: value,
     value,
   };
 }

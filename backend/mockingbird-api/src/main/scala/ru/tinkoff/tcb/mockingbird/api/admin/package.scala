@@ -21,6 +21,7 @@ import ru.tinkoff.tcb.mockingbird.api.response.DestinationDTO
 import ru.tinkoff.tcb.mockingbird.api.response.OperationResult
 import ru.tinkoff.tcb.mockingbird.api.response.SourceDTO
 import ru.tinkoff.tcb.mockingbird.codec.*
+import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.model.DestinationConfiguration
 import ru.tinkoff.tcb.mockingbird.model.GrpcStub
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
@@ -54,38 +55,35 @@ package object admin {
       .out(stringBody)
       .summary("Тестирование работоспособности XPath-выражения")
 
-  private val tryStub = basicTest.in("tryStub").summary("Проверка резолвинга HTTP заглушки")
-
-  private val bodylessEndpoint: PublicEndpoint[ExecInput, Throwable, SID[HttpStub], Any] =
-    tryStub
-      .in(execInput)
-      .out(jsonBody[SID[HttpStub]])
-
-  private val withBody: PublicEndpoint[ExecInputB, Throwable, SID[
+  private val tryStub: PublicEndpoint[ExecInputB, Throwable, SID[
     HttpStub
   ], Any] =
-    tryStub
+    basicTest
+      .in("tryStub")
+      .summary("Проверка резолвинга HTTP заглушки")
       .in(execInput)
       .in(
-        binaryBody(RawBodyType.ByteArrayBody)[String]
-          .map[RequestBody](SimpleRequestBody(_))(SimpleRequestBody.subset.getOption(_).get.value)
+        binaryBody(RawBodyType.ByteArrayBody)[Option[String]]
+          .map[RequestBody]((_: Option[String]).fold[RequestBody](AbsentRequestBody)(SimpleRequestBody(_)))(
+            SimpleRequestBody.subset.getOption(_).map(_.value)
+          )
       )
       .out(jsonBody[SID[HttpStub]])
 
-  val tryGet: PublicEndpoint[ExecInput, Throwable, SID[HttpStub], Any] =
-    bodylessEndpoint.get
+  val tryGet: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
+    tryStub.get
   val tryPost: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
-    withBody.post
+    tryStub.post
   val tryPatch: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
-    withBody.patch
+    tryStub.patch
   val tryPut: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
-    withBody.put
+    tryStub.put
   val tryDelete: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
-    withBody.delete
-  val tryHead: PublicEndpoint[ExecInput, Throwable, SID[HttpStub], Any] =
-    bodylessEndpoint.head
-  val tryOptions: PublicEndpoint[ExecInput, Throwable, SID[HttpStub], Any] =
-    bodylessEndpoint.options
+    tryStub.delete
+  val tryHead: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
+    tryStub.head
+  val tryOptions: PublicEndpoint[ExecInputB, Throwable, SID[HttpStub], Any] =
+    tryStub.options
 
   val tryScenario: PublicEndpoint[ScenarioResolveRequest, Throwable, SID[Scenario], Any] =
     basicTest.post

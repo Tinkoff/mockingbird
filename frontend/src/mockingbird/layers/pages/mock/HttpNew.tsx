@@ -10,22 +10,22 @@ import FormHttp from './FormHttp';
 import { mapFormDataToStub } from './utils';
 import type { TFormCallback, THTTPFormData } from './types';
 
-interface Props {
+type Props = {
   labels: string[];
   serviceId: string;
-}
+};
 
 export default function HttpNew({ labels, serviceId }: Props) {
   const create = useActions(createAction);
   const { status } = useStoreSelector(createStubStore, selectorAsIs);
   const resetCreateState = useActions(resetCreateStateAction);
-  useEffect(() => resetCreateState, [resetCreateState]);
+  useEffect(() => resetCreateState as any, [resetCreateState]);
 
   const onCreate = useCallback(
     (data: THTTPFormData, callbacks: TFormCallback[]) => {
       create({
         type: 'http',
-        data: mapFormDataToStub(data, callbacks, serviceId),
+        data: mapFormDataToStub(data, serviceId, callbacks),
         serviceId,
       });
     },

@@ -1,16 +1,17 @@
 import { mapSelectItem } from 'src/mockingbird/infrastructure/helpers/forms';
+import type { TFormCallbackMessage, TFormCallbackHTTP } from './types';
 
 export const SCOPES = [
   {
-    title: 'Вечный',
+    label: 'Вечный',
     value: 'persistent',
   },
   {
-    title: 'Эфемерный',
+    label: 'Эфемерный',
     value: 'ephemeral',
   },
   {
-    title: 'N-разовый',
+    label: 'N-разовый',
     value: 'countdown',
   },
 ];
@@ -50,26 +51,26 @@ export const DEFAULT_SCENARIO_INPUT = {
 
 export const CALLBACK_TYPES = [
   {
-    title: 'HTTP',
+    label: 'HTTP',
     value: 'http',
   },
   {
-    title: 'Message',
+    label: 'Message',
     value: 'message',
   },
 ];
 
 export const CALLBACK_HTTP_RESPONSE_TYPES = [
   {
-    title: '-',
+    label: '-',
     value: '',
   },
   {
-    title: 'JSON',
+    label: 'JSON',
     value: 'json',
   },
   {
-    title: 'XML',
+    label: 'XML',
     value: 'xml',
   },
 ];
@@ -86,14 +87,14 @@ const DEFAULT_CALLBACK_MESSAGE_OUTPUT = {
   payload: {},
 };
 
-export const DEFAULT_CALLBACK_HTTP = {
+export const DEFAULT_CALLBACK_HTTP: Partial<TFormCallbackHTTP> = {
   type: 'http',
   request: JSON.stringify(DEFAULT_CALLBACK_HTTP_REQUEST, undefined, 2),
   responseMode: '',
   persist: JSON.stringify({}),
 };
 
-export const DEFAULT_CALLBACK_MESSAGE = {
+export const DEFAULT_CALLBACK_MESSAGE: Partial<TFormCallbackMessage> = {
   type: 'message',
   destination: '',
   output: JSON.stringify(DEFAULT_CALLBACK_MESSAGE_OUTPUT, undefined, 2),

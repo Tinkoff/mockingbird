@@ -1,7 +1,7 @@
 import { createReducer, createEvent } from '@tramvai/state';
 import type { Service } from '../../service/types';
 
-type ServicesState = {
+export type ServicesState = {
   status: 'none' | 'loading' | 'complete' | 'error';
   services: Service[];
 };

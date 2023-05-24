@@ -4,10 +4,10 @@ import type { TScenarioMock } from 'src/mockingbird/models/mock/types';
 import { getPathMock } from 'src/mockingbird/paths';
 import Item from './Item';
 
-interface Props {
+type Props = {
   serviceId: string;
   item: TScenarioMock;
-}
+};
 
 export default function ScenarioItem({ serviceId, item }: Props) {
   const { id, name, source, destination = '', scope, times, labels } = item;

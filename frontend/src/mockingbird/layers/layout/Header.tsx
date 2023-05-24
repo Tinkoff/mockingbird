@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from '@tramvai/state';
-import { Shadow, Container, Row } from '@platform-ui/navigation';
-import Text from '@platform-ui/text';
+import { Container, Space, Title } from '@mantine/core';
 import { getJson } from 'src/infrastructure/request';
+import { Shadow } from './Shadow';
 
-interface Props {
+type Props = {
   assetsPrefix: string;
-}
+};
 
 function Header({ assetsPrefix }: Props) {
   const [version, setVersion] = useState(null);
@@ -21,7 +21,9 @@ function Header({ assetsPrefix }: Props) {
   return (
     <Shadow>
       <Container>
-        <Row left={<Text size={19}>{title}</Text>} />
+        <Space h="sm" />
+        <Title order={2}>{title}</Title>
+        <Space h="sm" />
       </Container>
     </Shadow>
   );

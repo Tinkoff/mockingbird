@@ -1,4 +1,4 @@
-import generateId from '@platform-ui/generateId';
+import { v4 as generateId } from 'uuid';
 import {
   parseJSON,
   stringifyJSON,
@@ -60,8 +60,8 @@ export function mapStubToFormData(serviceId: string, data?: THTTPMock) {
 
 export function mapFormDataToStub(
   data: THTTPFormData,
-  callbacks: TFormCallback[],
-  serviceId: string
+  serviceId: string,
+  callbacks: TFormCallback[]
 ) {
   const { name, labels, scope, times, method, path, isPathPattern } = data;
   return {
@@ -87,7 +87,7 @@ export function mapScenarioToFormData(data?: TScenarioMock) {
       labels: [],
       scope: SCOPES[0].value,
       times: 1,
-      source: 'mockingbird_in',
+      source: '',
       destination: '',
       input: stringifyJSON(DEFAULT_SCENARIO_INPUT),
       output: stringifyJSON({}),
@@ -114,8 +114,8 @@ export function mapScenarioToFormData(data?: TScenarioMock) {
 
 export function mapFormDataToScenario(
   data: TScenarioFormData,
-  callbacks: TFormCallback[],
-  serviceId: string
+  serviceId: string,
+  callbacks: TFormCallback[]
 ) {
   const { name, labels, scope, times, source, destination } = data;
   return {
@@ -202,15 +202,15 @@ export function mapFormDataToGrpc(data: TGRPCFormData, serviceId: string) {
   ];
   if (data.requestCodecs && data.requestCodecs.length)
     promises.push(
-      fileToBase64String(data.requestCodecs[0].file).then((requestCodecs) => ({
+      fileToBase64String(data.requestCodecs[0]).then((requestCodecs) => ({
         requestCodecs,
       }))
     );
   if (data.responseCodecs && data.responseCodecs.length)
     promises.push(
-      fileToBase64String(data.responseCodecs[0].file).then(
-        (responseCodecs) => ({ responseCodecs })
-      )
+      fileToBase64String(data.responseCodecs[0]).then((responseCodecs) => ({
+        responseCodecs,
+      }))
     );
   return Promise.all(promises).then((results) => Object.assign({}, ...results));
 }
@@ -233,7 +233,11 @@ function mapCallbackToFormCallbacks(callback?: TCallBack): TFormCallback[] {
   const callbacks = [];
   while (c) {
     callbacks.push(mapCallback(c));
-    c = c.callback;
+    if (c.callback) {
+      c = c.callback;
+    } else {
+      break;
+    }
   }
   return callbacks;
 }
@@ -271,6 +275,7 @@ function mapCallback(callback: TCallBack): TFormCallback {
       delay: callback.delay,
     };
   }
+  throw new Error('Missed callback type while mapping');
 }
 
 function mapFormCallback(callback: TFormCallback): TCallBack {
@@ -294,6 +299,7 @@ function mapFormCallback(callback: TFormCallback): TCallBack {
       delay: callback.delay || undefined,
     };
   }
+  throw new Error('Missing callback type while mapping');
 }
 
 function fileToBase64String(file: File) {

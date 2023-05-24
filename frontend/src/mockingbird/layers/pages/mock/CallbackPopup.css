@@ -1,9 +1,0 @@
-.buttons {
-  display: flex;
-  justify-content: center;
-  flex-direction: row-reverse;
-}
-
-.buttons > * + * {
-  margin-right: 20px;
-}

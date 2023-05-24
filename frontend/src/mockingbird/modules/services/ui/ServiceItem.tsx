@@ -1,8 +1,6 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from '@tramvai/module-router';
-import Island from '@platform-ui/island';
-import Link from '@platform-ui/link';
-import Text from '@platform-ui/text';
+import { Paper, Anchor, Text } from '@mantine/core';
 import {
   getPathMocks,
   getPathSources,
@@ -28,20 +26,39 @@ export default function ServiceItem({ execApiPath, item }: Props) {
     [navigate]
   );
   return (
-    <Island clickable onClick={handleClick}>
+    <Paper onClick={handleClick} shadow="xs">
       <div className={styles.root}>
         <div className={styles.block}>
-          <Text size={17}>
-            <Link onClick={handleClick}>{name}</Link>
-          </Text>
-          <Text size={13}>{`${execApiPath}/${suffix}`}</Text>
+          <Anchor
+            size="md"
+            component="button"
+            type="button"
+            onClick={handleClick}
+          >
+            {name}
+          </Anchor>
+          <Text size="xs">{`${execApiPath}/${suffix}`}</Text>
         </div>
         <div className={styles.blockLinks}>
-          <Link onClick={navigateSources}>Источники</Link>
-          <Link onClick={navigateDestinations}>Получатели</Link>
+          <Anchor
+            size="sm"
+            component="button"
+            type="button"
+            onClick={navigateSources}
+          >
+            Источники
+          </Anchor>
+          <Anchor
+            size="sm"
+            component="button"
+            type="button"
+            onClick={navigateDestinations}
+          >
+            Получатели
+          </Anchor>
         </div>
       </div>
-    </Island>
+    </Paper>
   );
 }
 
@@ -49,7 +66,11 @@ function isClick(event: MouseEvent) {
   let found = event.target;
   const root = event.currentTarget;
   while (found && found !== root) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     if (found.tagName === 'A' || found.tagName === 'BUTTON') return;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     found = found.parentElement;
   }
   const selection = window.getSelection()?.toString();
