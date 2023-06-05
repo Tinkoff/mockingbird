@@ -11,7 +11,6 @@ import sttp.tapir.Schema
 import sttp.tapir.SchemaType
 import sttp.tapir.Validator
 
-import ru.tinkoff.tcb.mockingbird.model.JsonResponse
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
 
 object schema {
@@ -21,9 +20,6 @@ object schema {
       SchemaType.SCoproduct(Nil, None)(_ => None),
       None
     )
-
-  implicit val jsonResponseSchema: Schema[JsonResponse] =
-    Schema(SchemaType.SProduct[JsonResponse](Nil))
 
   implicit val regexSchema: Schema[Regex] =
     Schema.schemaForString.as[Regex]
