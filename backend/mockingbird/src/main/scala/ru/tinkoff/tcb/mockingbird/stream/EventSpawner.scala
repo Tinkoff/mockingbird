@@ -22,17 +22,23 @@ import ru.tinkoff.tcb.mockingbird.error.CompoundError
 import ru.tinkoff.tcb.mockingbird.error.EventProcessingError
 import ru.tinkoff.tcb.mockingbird.error.ScenarioExecError
 import ru.tinkoff.tcb.mockingbird.error.ScenarioSearchError
+import ru.tinkoff.tcb.mockingbird.error.SourceFault
 import ru.tinkoff.tcb.mockingbird.error.SpawnError
 import ru.tinkoff.tcb.mockingbird.model.EventSourceRequest
+import ru.tinkoff.tcb.mockingbird.model.ResponseSpec
+import ru.tinkoff.tcb.mockingbird.model.SourceConfiguration
+import ru.tinkoff.tcb.mockingbird.resource.ResourceManager
 import ru.tinkoff.tcb.mockingbird.scenario.ScenarioEngine
 import ru.tinkoff.tcb.utils.circe.JsonString
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
+import ru.tinkoff.tcb.utils.id.SID
 
 final class EventSpawner(
     eventConfig: EventConfig,
     fetcher: SDFetcher,
     private val httpBackend: SttpBackend[Task, ?],
-    engine: ScenarioEngine
+    engine: ScenarioEngine,
+    rm: ResourceManager
 ) {
   private val log = MDCLogging.`for`[WLD](this)
 
@@ -67,7 +73,7 @@ final class EventSpawner(
       }
     } yield decoded.noSpaces
 
-  private def fetch(req: EventSourceRequest): Task[Vector[String]] = {
+  private def fetch(req: EventSourceRequest, triggers: Vector[ResponseSpec]): Task[Vector[String]] = {
     val request = basicRequest
       .headers(req.headers.view.mapValues(_.asString).toMap)
       .pipe(r => req.body.cata(b => r.body(b.asString), r))
@@ -76,9 +82,14 @@ final class EventSpawner(
 
     for {
       response <- request.send(httpBackend)
+      reInit = triggers.exists(sp => sp.code.forall(_ == response.code.code) && sp.checkBody(response.body.merge))
       body <- ZIO
         .fromEither(response.body)
-        .mapError(err => EventProcessingError(s"Запрос на ${req.url.asString} завершился ошибкой ($err)"))
+        .mapError(err =>
+          (if (reInit) SourceFault(_) else EventProcessingError(_))(
+            s"Запрос на ${req.url.asString} завершился ошибкой ($err)"
+          )
+        )
       processed <- ZIO.fromEither {
         for {
           vectorized <- req.jenumerate.map(jvectorize).getOrElse((s: String) => Right(Vector(s)))(body)
@@ -97,8 +108,9 @@ final class EventSpawner(
         ZIO
           .validateParDiscard(_) { sourceConf =>
             (for {
-              _   <- Tracing.init
-              res <- fetch(sourceConf.request).mapError(SpawnError(sourceConf.name, _))
+              _ <- Tracing.init
+              res <- fetch(sourceConf.request, sourceConf.reInitTriggers.map(_.toVector).orEmpty)
+                .mapError(SpawnError(sourceConf.name, _))
               neRes = res.filter(_.nonEmpty)
               _ <- ZIO.when(neRes.nonEmpty)(log.info(s"Отправлено в обработку: ${neRes.length}"))
               _ <- ZIO
@@ -130,6 +142,8 @@ final class EventSpawner(
   private lazy val recover: PartialFunction[Throwable, URIO[WLD, Unit]] = {
     case CompoundError(errs) if errs.forall(recover.isDefinedAt) =>
       ZIO.foreachDiscard(errs)(recover)
+    case SpawnError(sid, SourceFault(_)) =>
+      rm.reinitialize(sid.asInstanceOf[SID[SourceConfiguration]])
     case EventProcessingError(err) =>
       log.warn(s"Ошибка при обработке события: $err")
     case ScenarioExecError(err) =>
@@ -152,6 +166,7 @@ object EventSpawner {
       fetcher        <- ZIO.service[SDFetcher]
       sttpClient     <- ZIO.service[SttpBackend[Task, Any]]
       scenarioEngine <- ZIO.service[ScenarioEngine]
-    } yield new EventSpawner(config, fetcher, sttpClient, scenarioEngine)
+      rm             <- ZIO.service[ResourceManager]
+    } yield new EventSpawner(config, fetcher, sttpClient, scenarioEngine, rm)
   }
 }

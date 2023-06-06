@@ -26,7 +26,8 @@ final case class SourceConfiguration(
     service: String,
     request: EventSourceRequest,
     init: Option[NonEmptyVector[ResourceRequest]],
-    shutdown: Option[NonEmptyVector[ResourceRequest]]
+    shutdown: Option[NonEmptyVector[ResourceRequest]],
+    reInitTriggers: Option[NonEmptyVector[ResponseSpec]]
 )
 
 object SourceConfiguration {
