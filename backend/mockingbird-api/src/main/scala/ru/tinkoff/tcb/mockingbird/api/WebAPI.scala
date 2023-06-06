@@ -8,6 +8,7 @@ import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.CorsHandler
+import mouse.ignore
 import sttp.tapir.server.vertx.zio.VertxZioServerInterpreter.*
 import zio.managed.*
 
@@ -46,7 +47,7 @@ object WebAPI {
         router.route().path(url).handler { ctx =>
           val response = ctx.response()
           response.setStatusCode(200)
-          response.end().result()
+          ignore(response.end().result())
         }
       }
       server.requestHandler(router).listen(serverConfig.port)
