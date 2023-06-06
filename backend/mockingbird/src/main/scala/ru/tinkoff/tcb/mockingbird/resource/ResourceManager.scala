@@ -15,6 +15,8 @@ import ru.tinkoff.tcb.mockingbird.dal.SourceConfigurationDAO
 import ru.tinkoff.tcb.mockingbird.error.CompoundError
 import ru.tinkoff.tcb.mockingbird.error.ResourceManagementError
 import ru.tinkoff.tcb.mockingbird.model.ResourceRequest
+import ru.tinkoff.tcb.mockingbird.model.SourceConfiguration
+import ru.tinkoff.tcb.utils.id.SID
 
 final class ResourceManager(
     private val httpBackend: SttpBackend[Task, ?],
@@ -82,6 +84,24 @@ final class ResourceManager(
         case Left(err) =>
           ResourceManagementError(s"Запрос на ${req.url.asString} завершился ошибкой ($err)")
       }
+
+  def reinitialize(sourceId: SID[SourceConfiguration]): URIO[WLD, Unit] =
+    (for {
+      source <- sourceDAO.findById(sourceId).someOrFail(ResourceManagementError(s"Can't find source with id $sourceId"))
+      inits = source.init.map(_.toVector).getOrElse(Vector.empty)
+      _ <- ZIO.validateDiscard(inits)(execute).mapError(CompoundError)
+    } yield ()).catchAll {
+      case CompoundError(errs) if errs.forall(recover.isDefinedAt) =>
+        ZIO.foreachDiscard(errs)(recover)
+      case CompoundError(errs) =>
+        val recoverable = errs.filter(recover.isDefinedAt)
+        val fatal       = errs.find(!recover.isDefinedAt(_))
+        ZIO.foreachDiscard(recoverable)(recover) *> log.errorCause("Fatal error", fatal.get) *> ZIO.die(fatal.get)
+      case thr if recover.isDefinedAt(thr) =>
+        recover(thr)
+      case thr =>
+        log.errorCause("Fatal error", thr) *> ZIO.die(thr)
+    }
 
   private val recover: PartialFunction[Throwable, URIO[WLD, Unit]] = {
     case ResourceManagementError(msg) =>
