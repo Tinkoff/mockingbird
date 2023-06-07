@@ -3,6 +3,7 @@ package ru.tinkoff.tcb.mockingbird.api
 import io.vertx.ext.web.Route
 import io.vertx.ext.web.Router
 import sttp.model.Header
+import sttp.tapir.server.interceptor.RequestInterceptor
 import sttp.tapir.server.vertx.zio.VertxZioServerInterpreter
 import sttp.tapir.server.vertx.zio.VertxZioServerOptions
 import sttp.tapir.swagger.SwaggerUIOptions
@@ -47,7 +48,11 @@ final class PublicHttp(handler: PublicApiHandler) {
     )
 
   private val options =
-    VertxZioServerOptions.customiseInterceptors[WLD].notAcceptableInterceptor(None).options
+    VertxZioServerOptions
+      .customiseInterceptors[WLD]
+      .notAcceptableInterceptor(None)
+      .addInterceptor(RequestInterceptor.effect(_ => Tracing.init))
+      .options
 
   val http: List[Router => Route] =
     (withString ++ withMultipart ++ swaggerEndpoints)
