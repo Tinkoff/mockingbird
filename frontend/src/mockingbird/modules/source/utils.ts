@@ -29,8 +29,8 @@ export function mapFormDataToSource(
 ): Source {
   const { name, description } = data;
   return {
-    name,
-    description,
+    name: name.trim(),
+    description: description.trim(),
     service: serviceId,
     request: parseJSON(data.request),
     init: parseJSON(data.init, true),
