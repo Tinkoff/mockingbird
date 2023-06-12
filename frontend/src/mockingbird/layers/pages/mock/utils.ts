@@ -66,7 +66,7 @@ export function mapFormDataToStub(
   const { name, labels, scope, times, method, path, isPathPattern } = data;
   return {
     ...mapPaths(path, isPathPattern, serviceId),
-    name,
+    name: name.trim(),
     labels,
     method,
     scope,
@@ -119,7 +119,7 @@ export function mapFormDataToScenario(
 ) {
   const { name, labels, scope, times, source, destination } = data;
   return {
-    name,
+    name: name.trim(),
     labels,
     scope,
     times: scope === 'countdown' ? times : undefined,
@@ -186,14 +186,14 @@ export function mapFormDataToGrpc(data: TGRPCFormData, serviceId: string) {
   } = data;
   const promises: any = [
     Promise.resolve({
-      name,
+      name: name.trim(),
       labels,
       scope,
       times: scope === 'countdown' ? times : undefined,
-      methodName,
-      requestClass,
+      methodName: methodName.trim(),
+      requestClass: requestClass.trim(),
       requestPredicates: parseJSON(data.requestPredicates),
-      responseClass,
+      responseClass: responseClass.trim(),
       response: parseJSON(data.response),
       state: parseJSON(data.state, true),
       seed: parseJSON(data.seed, true),
@@ -218,7 +218,7 @@ export function mapFormDataToGrpc(data: TGRPCFormData, serviceId: string) {
 function mapPaths(_path: string, isPattern: boolean, serviceId: string) {
   let path = null;
   let pathPattern = null;
-  const result = `/${serviceId}${_path}`;
+  const result = `/${serviceId}${_path.trim()}`;
   if (isPattern) pathPattern = result;
   else path = result;
   return {
@@ -283,7 +283,7 @@ function mapFormCallback(callback: TFormCallback): TCallBack {
     const res: TCallBackHTTP = {
       type: callback.type,
       request: parseJSON(callback.request),
-      delay: callback.delay || undefined,
+      delay: callback.delay?.trim() || undefined,
     };
     if (callback.responseMode) {
       res.responseMode = callback.responseMode;
@@ -296,7 +296,7 @@ function mapFormCallback(callback: TFormCallback): TCallBack {
       type: callback.type,
       destination: callback.destination,
       output: parseJSON(callback.output),
-      delay: callback.delay || undefined,
+      delay: callback.delay?.trim() || undefined,
     };
   }
   throw new Error('Missing callback type while mapping');
