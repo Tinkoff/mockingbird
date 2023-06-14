@@ -225,10 +225,11 @@ final class AdminApiHandler(
       service: Option[String],
       labels: List[String]
   ): RIO[WLD, Vector[HttpStub]] = {
-    var queryDoc = prop[HttpStub](_.scope) =/= [Scope] Scope.Countdown || prop[HttpStub](_.times) > Option(0)
+    var queryDoc =
+      prop[HttpStub](_.scope) =/= Scope.Countdown.asInstanceOf[Scope] || prop[HttpStub](_.times) > Option(0)
     if (query.isDefined) {
       val qs = query.get
-      val q = prop[HttpStub](_.id) === [SID[HttpStub]] SID(qs) ||
+      val q = prop[HttpStub](_.id) === SID[HttpStub](qs).asInstanceOf[SID[HttpStub]] ||
         prop[HttpStub](_.name).regex(qs, "i") ||
         prop[HttpStub](_.path).regex(qs, "i") ||
         prop[HttpStub](_.pathPattern).regex(qs, "i")
@@ -249,10 +250,11 @@ final class AdminApiHandler(
       service: Option[String],
       labels: List[String]
   ): RIO[WLD, Vector[Scenario]] = {
-    var queryDoc = prop[Scenario](_.scope) =/= [Scope] Scope.Countdown || prop[Scenario](_.times) > Option(0)
+    var queryDoc =
+      prop[Scenario](_.scope) =/= Scope.Countdown.asInstanceOf[Scope] || prop[Scenario](_.times) > Option(0)
     if (query.isDefined) {
       val qs = query.get
-      val q = prop[Scenario](_.id) === [SID[Scenario]] SID(qs) ||
+      val q = prop[Scenario](_.id) === SID[Scenario](qs).asInstanceOf[SID[Scenario]] ||
         prop[Scenario](_.name).regex(qs, "i") ||
         prop[Scenario](_.source).regex(qs, "i") ||
         prop[Scenario](_.destination).regex(qs, "i")
@@ -393,10 +395,10 @@ final class AdminApiHandler(
       service: Option[String],
       labels: List[String]
   ): RIO[WLD, Vector[GrpcStub]] = {
-    var queryDoc = prop[GrpcStub](_.scope) =/= [Scope] Scope.Countdown || prop[GrpcStub](_.times) > Option(0)
+    var queryDoc = prop[GrpcStub](_.scope) =/= Scope.Countdown.asInstanceOf[Scope] || prop[GrpcStub](_.times) > Option(0)
     if (query.isDefined) {
       val qs = query.get
-      val q = prop[GrpcStub](_.id) === [SID[GrpcStub]] SID(qs) ||
+      val q = prop[GrpcStub](_.id) === SID[GrpcStub](qs).asInstanceOf[SID[GrpcStub]] ||
         prop[GrpcStub](_.name).regex(qs, "i") ||
         prop[GrpcStub](_.methodName).regex(qs, "i")
       queryDoc = queryDoc && q
