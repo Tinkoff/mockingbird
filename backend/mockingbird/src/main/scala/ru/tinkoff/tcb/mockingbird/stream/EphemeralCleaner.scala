@@ -35,11 +35,11 @@ final class EphemeralCleaner(stubDAO: HttpStubDAO[Task], scenarioDAO: ScenarioDA
       )
       _ <- log.info("Purging expired scenarios: {} deleted", deleted2)
       deleted3 <- stubDAO.delete(
-        prop[HttpStub](_.scope) === [Scope] Scope.Countdown && prop[HttpStub](_.times) <= Option(0)
+        prop[HttpStub](_.scope) === Scope.Countdown.asInstanceOf[Scope] && prop[HttpStub](_.times) <= Option(0)
       )
       _ <- log.info("Purging countdown stubs: {} deleted", deleted3)
       deleted4 <- scenarioDAO.delete(
-        prop[Scenario](_.scope) === [Scope] Scope.Countdown && prop[Scenario](_.times) <= Option(0)
+        prop[Scenario](_.scope) === Scope.Countdown.asInstanceOf[Scope] && prop[Scenario](_.times) <= Option(0)
       )
       _ <- log.info("Purging countdown scenarios: {} deleted", deleted4)
     } yield deleted

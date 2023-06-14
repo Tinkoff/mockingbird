@@ -27,7 +27,7 @@ object Settings {
   val common = Seq(
     organization := "ru.tinkoff",
     version := "3.9.2",
-    scalaVersion := "2.13.10",
+    scalaVersion := "2.13.11",
     Compile / packageDoc / publishArtifact := false,
     Compile / packageSrc / publishArtifact := false,
     Compile / doc / sources := Seq.empty,
