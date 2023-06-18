@@ -74,6 +74,14 @@ export default function Form(props: Props) {
         validate={validateJSONArray}
         mb="md"
       />
+      <InputJson
+        name="reInitTriggers"
+        label="reInitTriggers"
+        control={control as any}
+        disabled={disabled}
+        validate={validateJSONArray}
+        mb="md"
+      />
       {actions && (
         <Accordion variant="contained" mb="md">
           <Accordion.Item value="actions">

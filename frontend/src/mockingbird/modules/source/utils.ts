@@ -13,6 +13,7 @@ export function mapSourceToFormData(data?: Source): SourceFormData {
       request: stringifyJSON(DEFAULT_REQUEST),
       init: stringifyJSON([]),
       shutdown: stringifyJSON([]),
+      reInitTriggers: stringifyJSON([]),
     };
   return {
     name: data.name,
@@ -20,6 +21,7 @@ export function mapSourceToFormData(data?: Source): SourceFormData {
     request: stringifyJSON(data.request),
     init: stringifyJSON(data.init, []),
     shutdown: stringifyJSON(data.shutdown, []),
+    reInitTriggers: stringifyJSON(data.reInitTriggers, []),
   };
 }
 
@@ -35,5 +37,6 @@ export function mapFormDataToSource(
     request: parseJSON(data.request),
     init: parseJSON(data.init, true),
     shutdown: parseJSON(data.shutdown, true),
+    reInitTriggers: parseJSON(data.reInitTriggers, true),
   };
 }
