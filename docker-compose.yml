@@ -17,7 +17,7 @@ services:
     networks:
       - app-tier
   mock:
-    image: "ghcr.io/tinkoff/mockingbird:3.7.2-native"
+    image: "ghcr.io/tinkoff/mockingbird:3.10.0-native"
     ports:
       - "8228:8228"
       - "9000:9000"

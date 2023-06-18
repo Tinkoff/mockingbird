@@ -5,6 +5,7 @@ export interface Source {
   request: any;
   init?: any[];
   shutdown?: any[];
+  reInitTriggers?: any[];
 }
 
 export interface SourceFormData {
@@ -13,4 +14,5 @@ export interface SourceFormData {
   request: string;
   init: string;
   shutdown: string;
+  reInitTriggers: string;
 }
