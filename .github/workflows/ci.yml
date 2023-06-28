@@ -118,6 +118,9 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    env:
+      CI: true
+
     steps:
       - uses: actions/checkout@v3
 
