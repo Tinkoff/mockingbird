@@ -228,6 +228,9 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
     sut.map(_(Json.obj("f" := 1))) shouldBe Some(false)
     sut.map(_(Json.obj("f" := false))) shouldBe Some(false)
     sut.map(_(Json.obj("f" := Vector.empty[Json]))) shouldBe Some(false)
+    sut.map(_(Json.obj("f" := "1" :: Nil))) shouldBe Some(true)
+    sut.map(_(Json.obj("f" := 2 :: Nil))) shouldBe Some(true)
+    sut.map(_(Json.obj("f" := true :: Nil))) shouldBe Some(true)
     sut.map(_(Json.obj())) shouldBe Some(false)
   }
 
@@ -245,6 +248,9 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
     sut.map(_(Json.obj("f" := 1))) shouldBe Some(true)
     sut.map(_(Json.obj("f" := false))) shouldBe Some(true)
     sut.map(_(Json.obj("f" := Vector.empty[Json]))) shouldBe Some(true)
+    sut.map(_(Json.obj("f" := "1" :: "kek" :: Nil))) shouldBe Some(false)
+    sut.map(_(Json.obj("f" := 1 :: 2 :: 3 :: Nil))) shouldBe Some(false)
+    sut.map(_(Json.obj("f" := true :: false :: Nil))) shouldBe Some(false)
     sut.map(_(Json.obj())) shouldBe Some(true)
   }
 
