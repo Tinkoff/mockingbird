@@ -102,6 +102,7 @@ object JsonPredicate {
         case (Exists, JsonBoolean(false)) => Validated.valid(_.isNull)
         case (In, JsonVector(vec))        => Validated.valid(vec.contains)
         case (NotIn, JsonVector(vec))     => Validated.valid(!vec.contains(_))
+        case (AllIn, JsonVector(vec))     => Validated.valid(_.asArray.exists(vx => vec.forall(vx.contains)))
         case (kwd, j)                     => Validated.invalidNel(kwd -> j)
       }
 }
