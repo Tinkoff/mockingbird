@@ -38,6 +38,7 @@ object Keyword
   case object Exists extends Keyword("exists", "$exists") with JsonKeyword with XmlKeyword
   case object In extends Keyword("[_]", "$in") with JsonKeyword with FormKeyword
   case object NotIn extends Keyword("![_]", "$nin") with JsonKeyword with FormKeyword
+  case object AllIn extends Keyword("&[_]", "$all") with JsonKeyword with FormKeyword
   case object Cdata extends Keyword("cdata", "") with XmlKeyword
   case object JCdata extends Keyword("jcdata", "") with XmlKeyword
   case object XCdata extends Keyword("xcdata", "") with XmlKeyword

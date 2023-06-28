@@ -247,4 +247,18 @@ class JsonPredicateSpec extends AnyFunSuite with Matchers with EitherValues {
     sut.map(_(Json.obj("f" := Vector.empty[Json]))) shouldBe Some(true)
     sut.map(_(Json.obj())) shouldBe Some(true)
   }
+
+  test("Check &[_]") {
+    val spec = Json.obj(
+      "f" := Json.obj("&[_]" := "1".asJson :: 2.asJson :: true.asJson :: Nil)
+    )
+
+    val sut = JsonPredicate(spec.as[Map[JsonOptic, Map[Keyword.Json, Json]]].value).toOption
+
+    sut.map(_(Json.obj("f" := 1))) shouldBe Some(false)
+    sut.map(_(Json.obj("f" := "1"))) shouldBe Some(false)
+    sut.map(_(Json.obj("f" := "1".asJson :: 2.asJson :: true.asJson :: Nil))) shouldBe Some(true)
+    sut.map(_(Json.obj("f" := 2.asJson :: "1".asJson :: true.asJson :: Nil))) shouldBe Some(true)
+    sut.map(_(Json.obj("f" := 2.asJson :: "1".asJson :: false.asJson :: Nil))) shouldBe Some(false)
+  }
 }
