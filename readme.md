@@ -1,3 +1,5 @@
+<img align="left" src="img/mascot.png" height="150px" style="padding-left: 20px"/>
+
 # mockingbird
 
 mockingbird - сервис эмуляции REST-сервисов и сервисов с интерфейсами-очередями
