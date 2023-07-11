@@ -165,4 +165,15 @@ lazy val `mockingbird-native` = (project in file("mockingbird-native"))
     )
   )
 
-val root = project in file(".")
+val root = (project in file("."))
+  .aggregate(
+    utils,
+    circeUtils,
+    dataAccess,
+    mockingbird,
+    `mockingbird-api`,
+    `mockingbird-native`,
+  )
+  .settings(
+    run / aggregate := false,
+  )
