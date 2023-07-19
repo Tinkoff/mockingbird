@@ -59,6 +59,8 @@ case class MockingbirdConfiguration(
 )
 
 object MockingbirdConfiguration {
+  type Layer = ULayer[ServerConfig & SecurityConfig & MongoConfig & ProxyConfig & EventConfig]
+
   def load(): MockingbirdConfiguration =
     load(ConfigFactory.load().getConfig("ru.tinkoff.tcb"))
 
@@ -78,4 +80,8 @@ object MockingbirdConfiguration {
   val mongo: ULayer[MongoConfig]       = ZLayer.succeed(conf.mongo)
   val proxy: ULayer[ProxyConfig]       = ZLayer.succeed(conf.proxy)
   val event: ULayer[EventConfig]       = ZLayer.succeed(conf.event)
+
+  val live: Layer =
+    server ++ security ++ mongo ++ proxy ++ event
+
 }

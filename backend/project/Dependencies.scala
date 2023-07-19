@@ -57,14 +57,20 @@ object Dependencies {
     "com.beachape" %% "enumeratum-circe" % "1.7.0"
   )
 
-  val scalatest = Seq(
-    "org.scalatest"    %% "scalatest"      % "3.2.2" % Test,
-    "com.ironcorelabs" %% "cats-scalatest" % "3.1.1" % Test
+  val scalatestMain = Seq(
+    "org.scalatest"    %% "scalatest"      % "3.2.2",
+    "com.ironcorelabs" %% "cats-scalatest" % "3.1.1",
   )
+
+  val scalatest = scalatestMain.map(_ % Test)
 
   val scalacheck = Seq(
     "org.scalatestplus" %% "scalacheck-1-15" % "3.2.2.0" % Test,
     "org.scalacheck"    %% "scalacheck"      % "1.15.2"  % Test
+  )
+
+  val scalamock = Seq(
+    "org.scalamock" %% "scalamock" % "5.1.0" % Test
   )
 
   lazy val refined = Seq(

@@ -2,7 +2,7 @@
 -J-Xmx1536m
 -J-XX:+AlwaysPreTouch
 -J-XX:ReservedCodeCacheSize=128M
--J-XX:MaxMetaspaceSize=512M
+-J-XX:MaxMetaspaceSize=1024M
 -J-Xss2m
 -J-XX:+TieredCompilation
 -J-XX:+UseParallelGC

@@ -285,7 +285,7 @@ class UntypedCriteriaSpec extends AnyFlatSpec with Matchers {
   it should "correctly negate and" in {
     (
       !(criteria.name === "peka" && criteria.id === 42) &&
-        !(criteria.list in ("a", "b", "c"))
+        !(criteria.list.in("a", "b", "c"))
     ).toJson shouldBe BsonDocument(
       "$and" -> BsonArray(
         BsonDocument(

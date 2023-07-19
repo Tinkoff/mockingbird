@@ -2,6 +2,9 @@ package ru.tinkoff.tcb.mockingbird.api
 
 import scala.util.control.NonFatal
 
+import eu.timepit.refined.auto.*
+import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.refineV
 import io.circe.Json
 import io.circe.parser.parse
 import io.scalaland.chimney.dsl.*
@@ -19,12 +22,16 @@ import ru.tinkoff.tcb.mockingbird.api.response.OperationResult
 import ru.tinkoff.tcb.mockingbird.api.response.SourceDTO
 import ru.tinkoff.tcb.mockingbird.dal.DestinationConfigurationDAO
 import ru.tinkoff.tcb.mockingbird.dal.GrpcStubDAO
-import ru.tinkoff.tcb.mockingbird.dal.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.dal.LabelDAO
 import ru.tinkoff.tcb.mockingbird.dal.PersistentStateDAO
 import ru.tinkoff.tcb.mockingbird.dal.ScenarioDAO
 import ru.tinkoff.tcb.mockingbird.dal.ServiceDAO
 import ru.tinkoff.tcb.mockingbird.dal.SourceConfigurationDAO
+import ru.tinkoff.tcb.mockingbird.dal2.HttpStubDAO
+import ru.tinkoff.tcb.mockingbird.dal2.StubExactlyPath
+import ru.tinkoff.tcb.mockingbird.dal2.StubFetchParams
+import ru.tinkoff.tcb.mockingbird.dal2.StubFindParams
+import ru.tinkoff.tcb.mockingbird.dal2.StubPathPattern
 import ru.tinkoff.tcb.mockingbird.error.*
 import ru.tinkoff.tcb.mockingbird.error.DuplicationError
 import ru.tinkoff.tcb.mockingbird.error.ValidationError
@@ -78,14 +85,12 @@ final class AdminApiHandler(
         )
       )
       service = service1.orElse(service2).get
-      candidates0 <- stubDAO.findChunk(
-        prop[HttpStub](_.method) === body.method &&
-          (if (body.path.isDefined) prop[HttpStub](_.path) === body.path.map(_.value)
-           else prop[HttpStub](_.pathPattern) === body.pathPattern) &&
-          prop[HttpStub](_.scope) === body.scope &&
-          prop[HttpStub](_.times) > Option(0),
-        0,
-        Int.MaxValue
+      candidates0 <- stubDAO.find(
+        StubFindParams(
+          body.scope,
+          body.path.map(StubExactlyPath).getOrElse(body.pathPattern.map(StubPathPattern).get),
+          body.method
+        )
       )
       candidates1 = candidates0.filter(_.request == body.request)
       candidates2 = candidates1.filter(_.state == body.state)
@@ -224,25 +229,16 @@ final class AdminApiHandler(
       query: Option[String],
       service: Option[String],
       labels: List[String]
-  ): RIO[WLD, Vector[HttpStub]] = {
-    var queryDoc =
-      prop[HttpStub](_.scope) =/= Scope.Countdown.asInstanceOf[Scope] || prop[HttpStub](_.times) > Option(0)
-    if (query.isDefined) {
-      val qs = query.get
-      val q = prop[HttpStub](_.id) === SID[HttpStub](qs).asInstanceOf[SID[HttpStub]] ||
-        prop[HttpStub](_.name).regex(qs, "i") ||
-        prop[HttpStub](_.path).regex(qs, "i") ||
-        prop[HttpStub](_.pathPattern).regex(qs, "i")
-      queryDoc = queryDoc && q
-    }
-    if (service.isDefined) {
-      queryDoc = queryDoc && (prop[HttpStub](_.serviceSuffix) === service.get)
-    }
-    if (labels.nonEmpty) {
-      queryDoc = queryDoc && (prop[HttpStub](_.labels).containsAll(labels))
-    }
-    stubDAO.findChunk(queryDoc, page.getOrElse(0) * 20, 20, prop[HttpStub](_.created).sort(Desc))
-  }
+  ): RIO[WLD, Vector[HttpStub]] =
+    stubDAO.fetch(
+      StubFetchParams(
+        page.flatMap(refineV[NonNegative](_).toOption).getOrElse(0),
+        query,
+        service,
+        labels,
+        20
+      )
+    )
 
   def fetchScenarios(
       page: Option[Int],
@@ -270,13 +266,13 @@ final class AdminApiHandler(
   }
 
   def getStub(id: SID[HttpStub]): RIO[WLD, Option[HttpStub]] =
-    stubDAO.findById(id)
+    stubDAO.get(id)
 
   def getScenario(id: SID[Scenario]): RIO[WLD, Option[Scenario]] =
     scenarioDAO.findById(id)
 
   def deleteStub2(id: SID[HttpStub]): RIO[WLD, OperationResult[String]] =
-    ZIO.ifZIO(stubDAO.deleteById(id).map(_ > 0))(
+    ZIO.ifZIO(stubDAO.delete(id).map(_ > 0))(
       ZIO.succeed(OperationResult("success")),
       ZIO.succeed(OperationResult("nothing deleted"))
     )
@@ -299,16 +295,15 @@ final class AdminApiHandler(
         )
       )
       service = service1.orElse(service2).get
-      candidates0 <- stubDAO.findChunk(
-        where(_._id =/= id) &&
-          prop[HttpStub](_.method) === body.method &&
-          (if (body.path.isDefined) prop[HttpStub](_.path) === body.path.map(_.value)
-           else prop[HttpStub](_.pathPattern) === body.pathPattern) &&
-          prop[HttpStub](_.scope) === body.scope &&
-          prop[HttpStub](_.times) > Option(0),
-        0,
-        Int.MaxValue
-      )
+      candidates0 <- stubDAO
+        .find(
+          StubFindParams(
+            body.scope,
+            body.path.map(StubExactlyPath).getOrElse(body.pathPattern.map(StubPathPattern).get),
+            body.method
+          )
+        )
+        .map(_.filter(_.id != id))
       candidates1 = candidates0.filter(_.request == body.request)
       candidates2 = candidates1.filter(_.state == body.state)
       _ <- ZIO.when(candidates2.nonEmpty)(
@@ -333,7 +328,7 @@ final class AdminApiHandler(
       destNames = destinations.map(_.name).toSet
       vr        = HttpStub.validationRules(destNames)(stub)
       _   <- ZIO.when(vr.nonEmpty)(ZIO.fail(ValidationError(vr)))
-      res <- stubDAO.patch(stubPatch)
+      res <- stubDAO.update(stubPatch)
       _   <- labelDAO.ensureLabels(service.suffix, stubPatch.labels.to(Vector))
     } yield if (res.successful) OperationResult("success", stub.id) else OperationResult("nothing updated")
 
