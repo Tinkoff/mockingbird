@@ -1,18 +1,14 @@
 package ru.tinkoff.tcb.mockingbird.api
 
-import com.github.dwickern.macros.NameOf.*
 import io.circe.Json
 import kantan.xpath.Node
-import mouse.boolean.*
 import mouse.option.*
-import org.mongodb.scala.bson.*
 import zio.interop.catz.core.*
 
-import ru.tinkoff.tcb.criteria.*
-import ru.tinkoff.tcb.criteria.Typed.*
 import ru.tinkoff.tcb.logging.MDCLogging
-import ru.tinkoff.tcb.mockingbird.dal.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.dal.PersistentStateDAO
+import ru.tinkoff.tcb.mockingbird.dal2.HttpStubDAO
+import ru.tinkoff.tcb.mockingbird.dal2.StubMatchParams
 import ru.tinkoff.tcb.mockingbird.error.*
 import ru.tinkoff.tcb.mockingbird.misc.Renderable.ops.*
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
@@ -41,21 +37,8 @@ final class StubResolver(stubDAO: HttpStubDAO[Task], stateDAO: PersistentStateDA
   ): RIO[WLD, Option[(HttpStub, Option[PersistentState])]] =
     (
       for {
-        _ <- log.info("Поиск заглушек для запроса {} типа {}", path, scope)
-        pathPatternExpr = Expression[HttpStub](
-          None,
-          "$expr" -> BsonDocument(
-            "$regexMatch" -> BsonDocument(
-              "input" -> path,
-              "regex" -> s"$$${nameOf[HttpStub](_.pathPattern)}"
-            )
-          )
-        )
-        condition0 = prop[HttpStub](_.method) === method &&
-          (prop[HttpStub](_.path) ==@ path || pathPatternExpr) &&
-          prop[HttpStub](_.scope) === scope
-        condition = (scope == Scope.Countdown).fold(condition0 && prop[HttpStub](_.times) > Option(0), condition0)
-        candidates0 <- stubDAO.findChunk(condition, 0, Int.MaxValue)
+        _           <- log.info("Поиск заглушек для запроса {} типа {}", path, scope)
+        candidates0 <- stubDAO.findMatch(StubMatchParams(scope, path, method))
         _ <- ZIO.when(candidates0.isEmpty)(
           log.info("Не найдены обработчики для запроса {} типа {}", path, scope) *> ZIO.fail(EarlyReturn)
         )

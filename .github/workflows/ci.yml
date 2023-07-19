@@ -45,6 +45,35 @@ jobs:
           name: front-static
           path: frontend/dist/out
 
+  heavy-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+          check-latest: true
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.20.0'
+
+      - name: Get the Ref
+        id: get-ref
+        uses: ankitvgupta/ref-to-tag-action@v1.0.1
+        with:
+          ref: ${{ github.ref }}
+          head_ref: ${{ github.head_ref }}
+
+      - name: Test
+        run: |
+          cd backend
+          sbt "project integration;clean;fixCheck;test;"
+
   back-build:
     needs: [front-build]
 
@@ -142,7 +171,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: '3.20.0'
-      
+
       - name: Get the Ref
         id: get-ref
         uses: ankitvgupta/ref-to-tag-action@v1.0.1

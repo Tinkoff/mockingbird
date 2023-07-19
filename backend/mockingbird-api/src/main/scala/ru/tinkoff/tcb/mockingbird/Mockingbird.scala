@@ -39,6 +39,7 @@ import ru.tinkoff.tcb.mockingbird.config.ProxyConfig
 import ru.tinkoff.tcb.mockingbird.config.ProxyServerType
 import ru.tinkoff.tcb.mockingbird.config.ServerConfig
 import ru.tinkoff.tcb.mockingbird.dal.*
+import ru.tinkoff.tcb.mockingbird.dal2
 import ru.tinkoff.tcb.mockingbird.grpc.GrpcRequestHandler
 import ru.tinkoff.tcb.mockingbird.grpc.GrpcRequestHandlerImpl
 import ru.tinkoff.tcb.mockingbird.grpc.GrpcStubResolverImpl
@@ -52,7 +53,7 @@ import ru.tinkoff.tcb.mockingbird.stream.EventSpawner
 import ru.tinkoff.tcb.mockingbird.stream.SDFetcher
 import ru.tinkoff.tcb.utils.metrics.makeRegistry
 
-object Mockingbird extends scala.App {
+object Mockingbird {
   type FL = WLD & ServerConfig & PublicHttp & EventSpawner & ResourceManager & EphemeralCleaner & GrpcRequestHandler
 
   private val zioLog: Logging[UIO] = new ZUniversalLogging(this.getClass.getName)
@@ -91,16 +92,12 @@ object Mockingbird extends scala.App {
       .use(_ => ZIO.never)
       .exitCode
 
-  private val server = ZLayer.fromZIO {
+  private def server(config: MockingbirdConfiguration.Layer) = ZLayer.fromZIO {
     program
       .provide(
         Tracing.live,
         ZLayer.succeed(makeRegistry("mockingbird")),
-        MockingbirdConfiguration.server,
-        MockingbirdConfiguration.security,
-        MockingbirdConfiguration.mongo,
-        MockingbirdConfiguration.proxy,
-        MockingbirdConfiguration.event,
+        config,
         ZLayer.scoped {
           for {
             pc <- ZIO.service[ProxyConfig]
@@ -144,7 +141,7 @@ object Mockingbird extends scala.App {
         },
         mongoLayer,
         aesEncoder,
-        collection(_.stub) >>> HttpStubDAOImpl.live,
+        collection(_.stub) >>> dal2.mongo.HttpStubDAOImpl.live,
         collection(_.state) >>> PersistentStateDAOImpl.live,
         collection(_.scenario) >>> ScenarioDAOImpl.live,
         collection(_.service) >>> ServiceDAOImpl.live,
@@ -201,14 +198,20 @@ object Mockingbird extends scala.App {
     _ = builder.fallbackHandlerRegistry(mutableRegistry)
   } yield ()
 
-  Unsafe.unsafe { implicit us =>
-    wldRuntime.unsafe.run {
-      (registry *> zioLog.info(s"GRPC server started at port: $port") *> ZIO.scoped[Any](
-        server.build *> ZIO.never
-      ))
-        .catchAll(ex => zioLog.errorCause(ex.getMessage, ex))
-        .catchAllDefect(ex => zioLog.errorCause(ex.getMessage, ex))
-        .exitCode
+  def app(config: MockingbirdConfiguration.Layer) =
+    registry *> zioLog.info(s"GRPC server started at port: $port") *> ZIO.scoped[Any](
+      server(config).build *> ZIO.never
+    )
+
+  def main(args: Array[String]): Unit = {
+    val result = Unsafe.unsafe { implicit us =>
+      wldRuntime.unsafe.run {
+        app(MockingbirdConfiguration.live)
+          .catchAll(ex => zioLog.errorCause(ex.getMessage, ex))
+          .catchAllDefect(ex => zioLog.errorCause(ex.getMessage, ex))
+          .exitCode
+      }
     }
+
   }
 }

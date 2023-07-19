@@ -79,13 +79,3 @@ class HttpStubDAOImpl(collection: MongoCollection[BsonDocument])
       ascending(nameOf[HttpStub](_.labels))
     )
 }
-
-object HttpStubDAOImpl {
-  val live = ZLayer {
-    for {
-      mc <- ZIO.service[MongoCollection[BsonDocument]]
-      sd = new HttpStubDAOImpl(mc)
-      _ <- sd.createIndexes
-    } yield sd.asInstanceOf[HttpStubDAO[Task]]
-  }
-}

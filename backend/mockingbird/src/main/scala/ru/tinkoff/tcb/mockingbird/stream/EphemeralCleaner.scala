@@ -9,9 +9,8 @@ import zio.interop.catz.implicits.*
 
 import ru.tinkoff.tcb.criteria.*
 import ru.tinkoff.tcb.criteria.Typed.*
-import ru.tinkoff.tcb.mockingbird.dal.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.dal.ScenarioDAO
-import ru.tinkoff.tcb.mockingbird.model.HttpStub
+import ru.tinkoff.tcb.mockingbird.dal2.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.model.Scenario
 import ru.tinkoff.tcb.mockingbird.model.Scope
 
@@ -26,18 +25,14 @@ final class EphemeralCleaner(stubDAO: HttpStubDAO[Task], scenarioDAO: ScenarioDA
     for {
       current <- ZIO.clock.flatMap(_.instant)
       threshold = current.minusSeconds(secondsInDay)
-      deleted <- stubDAO.delete(
-        prop[HttpStub](_.scope).in[Scope](Scope.Ephemeral, Scope.Countdown) && prop[HttpStub](_.created) < threshold
-      )
-      _ <- log.info("Purging expired stubs: {} deleted", deleted)
+      deleted <- stubDAO.deleteExpired(threshold)
+      _       <- log.info("Purging expired stubs: {} deleted", deleted)
       deleted2 <- scenarioDAO.delete(
         prop[Scenario](_.scope).in[Scope](Scope.Ephemeral, Scope.Countdown) && prop[Scenario](_.created) < threshold
       )
-      _ <- log.info("Purging expired scenarios: {} deleted", deleted2)
-      deleted3 <- stubDAO.delete(
-        prop[HttpStub](_.scope) === Scope.Countdown.asInstanceOf[Scope] && prop[HttpStub](_.times) <= Option(0)
-      )
-      _ <- log.info("Purging countdown stubs: {} deleted", deleted3)
+      _        <- log.info("Purging expired scenarios: {} deleted", deleted2)
+      deleted3 <- stubDAO.deleteDepleted()
+      _        <- log.info("Purging countdown stubs: {} deleted", deleted3)
       deleted4 <- scenarioDAO.delete(
         prop[Scenario](_.scope) === Scope.Countdown.asInstanceOf[Scope] && prop[Scenario](_.times) <= Option(0)
       )

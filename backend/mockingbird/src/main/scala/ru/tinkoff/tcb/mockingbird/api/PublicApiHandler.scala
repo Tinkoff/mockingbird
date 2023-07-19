@@ -14,19 +14,16 @@ import sttp.client3.circe.*
 import sttp.model.Method
 import zio.interop.catz.core.*
 
-import ru.tinkoff.tcb.criteria.*
-import ru.tinkoff.tcb.criteria.Typed.*
 import ru.tinkoff.tcb.logging.MDCLogging
 import ru.tinkoff.tcb.mockingbird.config.ProxyConfig
-import ru.tinkoff.tcb.mockingbird.dal.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.dal.PersistentStateDAO
+import ru.tinkoff.tcb.mockingbird.dal2.HttpStubDAO
 import ru.tinkoff.tcb.mockingbird.error.*
 import ru.tinkoff.tcb.mockingbird.misc.Renderable.ops.*
 import ru.tinkoff.tcb.mockingbird.model.AbsentRequestBody
 import ru.tinkoff.tcb.mockingbird.model.BinaryResponse
 import ru.tinkoff.tcb.mockingbird.model.ByteArray
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
-import ru.tinkoff.tcb.mockingbird.model.HttpStub
 import ru.tinkoff.tcb.mockingbird.model.HttpStubResponse
 import ru.tinkoff.tcb.mockingbird.model.JsonProxyResponse
 import ru.tinkoff.tcb.mockingbird.model.MultipartRequestBody
@@ -129,7 +126,7 @@ final class PublicApiHandler(
             } else stub.response
           )
       }
-      _ <- ZIO.when(stub.scope == Scope.Countdown)(stubDAO.updateById(stub.id, prop[HttpStub](_.times).inc(-1)))
+      _ <- ZIO.when(stub.scope == Scope.Countdown)(stubDAO.incTimesById(stub.id, -1))
       _ <- ZIO.when(stub.callback.isDefined)(
         engine
           .recurseCallback(state, stub.callback.get, data, xdata)
