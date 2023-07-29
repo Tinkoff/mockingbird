@@ -16,7 +16,11 @@ import sttp.tapir.codec.enumeratum.TapirCodecEnumeratum
 import sttp.tapir.derevo.schema
 import sttp.tapir.generic.Configuration as TapirConfig
 
+import ru.tinkoff.tcb.bson.BsonDecoder
+import ru.tinkoff.tcb.bson.BsonEncoder
 import ru.tinkoff.tcb.bson.annotation.BsonDiscriminator
+import ru.tinkoff.tcb.bson.derivation.DerivedDecoder
+import ru.tinkoff.tcb.bson.derivation.DerivedEncoder
 import ru.tinkoff.tcb.bson.derivation.bsonDecoder
 import ru.tinkoff.tcb.bson.derivation.bsonEncoder
 import ru.tinkoff.tcb.bson.enumeratum.BsonEnum
@@ -96,7 +100,7 @@ object GrpcSchema {
     TapirConfig.default.withDiscriminator("type").copy(toEncodedName = modes)
 }
 
-@derive(encoder, decoder, bsonDecoder, bsonEncoder)
+@derive(encoder, decoder)
 case class GrpcMessageSchema(
     name: String,
     fields: List[GrpcField],
@@ -105,7 +109,9 @@ case class GrpcMessageSchema(
 ) extends GrpcRootMessage
 
 object GrpcMessageSchema {
-  implicit lazy val gmsSchema: Schema[GrpcMessageSchema] = Schema.derived[GrpcMessageSchema]
+  implicit lazy val gmsSchema: Schema[GrpcMessageSchema]       = Schema.derived[GrpcMessageSchema]
+  implicit lazy val gmsEncoder: BsonEncoder[GrpcMessageSchema] = DerivedEncoder.genBsonEncoder
+  implicit lazy val gmsDecoder: BsonDecoder[GrpcMessageSchema] = DerivedDecoder.genBsonDecoder
 }
 
 @derive(encoder, decoder, bsonEncoder, bsonDecoder, schema)
