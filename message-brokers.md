@@ -145,6 +145,16 @@ Shutdown:
     "url": "http://<kafka_rest_proxy_host>/consumers/<consumer_name>/instances/<consumer_instance_name>"
   }
 ]
+
+ReInit triggers:
+
+[
+  {
+    "mode": "json",
+    "code": 404,
+    "body": {"error_code":40403,"message":"Consumer instance not found."}
+  }
+]
 ```
 
 Пример конфигурации source (mockingbird читает Avro из топика):
@@ -188,6 +198,16 @@ Shutdown:
   {
     "method": "DELETE",
     "url": "http://<kafka_rest_proxy_host>/consumers/<consumer_name>/instances/<consumer_instance_name>"
+  }
+]
+
+ReInit triggers:
+
+[
+  {
+    "mode": "json",
+    "code": 404,
+    "body": {"error_code":40403,"message":"Consumer instance not found."}
   }
 ]
 ```
