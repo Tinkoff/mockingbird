@@ -16,6 +16,11 @@ import ru.tinkoff.tcb.dataaccess.UpdateResult
 import ru.tinkoff.tcb.mockingbird.api.request.StubPatch
 import ru.tinkoff.tcb.mockingbird.dal
 import ru.tinkoff.tcb.mockingbird.dal2
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubExactlyPath
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubFetchParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubFindParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubMatchParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubPathPattern
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
 import ru.tinkoff.tcb.mockingbird.model.Scope
 import ru.tinkoff.tcb.protocol.rof.*
@@ -40,12 +45,12 @@ class HttpStubDAOImpl(collection: MongoCollection[BsonDocument]) extends dal2.Ht
   override def deleteDepleted(): Task[Long] =
     impl.delete(prop[HttpStub](_.scope) === Scope.Countdown.asInstanceOf[Scope] && prop[HttpStub](_.times) <= Option(0))
 
-  override def find(params: dal2.StubFindParams): Task[Vector[HttpStub]] =
+  override def find(params: StubFindParams): Task[Vector[HttpStub]] =
     impl.findChunk(
       prop[HttpStub](_.method) === params.method &&
         (params.path match {
-          case dal2.StubExactlyPath(p)  => prop[HttpStub](_.path) === Option(p.value)
-          case dal2.StubPathPattern(pp) => prop[HttpStub](_.pathPattern) === Option(pp)
+          case StubExactlyPath(p)  => prop[HttpStub](_.path) === Option(p.value)
+          case StubPathPattern(pp) => prop[HttpStub](_.pathPattern) === Option(pp)
         }) &&
         prop[HttpStub](_.scope) === params.scope &&
         prop[HttpStub](_.times) > Option(0),
@@ -53,7 +58,7 @@ class HttpStubDAOImpl(collection: MongoCollection[BsonDocument]) extends dal2.Ht
       Int.MaxValue
     )
 
-  override def findMatch(params: dal2.StubMatchParams): Task[Vector[HttpStub]] = {
+  override def findMatch(params: StubMatchParams): Task[Vector[HttpStub]] = {
     val pathPatternExpr = Expression[HttpStub](
       None,
       "$expr" -> BsonDocument(
@@ -70,7 +75,7 @@ class HttpStubDAOImpl(collection: MongoCollection[BsonDocument]) extends dal2.Ht
     impl.findChunk(condition, 0, Int.MaxValue)
   }
 
-  override def fetch(params: dal2.StubFetchParams): Task[Vector[HttpStub]] = {
+  override def fetch(params: StubFetchParams): Task[Vector[HttpStub]] = {
     var queryDoc: Expression[Any] =
       prop[HttpStub](_.scope) =/= Scope.Countdown.asInstanceOf[Scope] || prop[HttpStub](_.times) > Option(0)
 

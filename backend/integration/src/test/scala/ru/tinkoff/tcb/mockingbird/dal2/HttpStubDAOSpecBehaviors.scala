@@ -10,7 +10,6 @@ import scala.util.Random
 import scala.util.matching.Regex
 
 import cats.Monad
-import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto.*
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.numeric.Positive
@@ -22,7 +21,6 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.rng.Seed
 import org.scalatest.EitherValues.*
-import org.scalatest.FutureOutcome
 import org.scalatest.OptionValues.*
 import org.scalatest.funsuite.AsyncFunSuiteLike
 import org.scalatest.matchers.should.Matchers
@@ -30,6 +28,7 @@ import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 import ru.tinkoff.tcb.dataaccess.UpdateResult
 import ru.tinkoff.tcb.mockingbird.api.request.StubPatch
+import ru.tinkoff.tcb.mockingbird.dal2.model.*
 import ru.tinkoff.tcb.mockingbird.model.*
 import ru.tinkoff.tcb.predicatedsl.Keyword
 import ru.tinkoff.tcb.utils.circe.optics.JsonOptic
@@ -40,7 +39,11 @@ import ru.tinkoff.tcb.utils.id.SID
     "scalafix:DisableSyntax.mapAs"
   )
 )
-trait HttpStubDAOSpecBehaviors[F[_]] extends AsyncFunSuiteLike with Matchers with ScalaCheckDrivenPropertyChecks {
+trait HttpStubDAOSpecBehaviors[F[_]]
+    extends AsyncFunSuiteLike
+    with Matchers
+    with ScalaCheckDrivenPropertyChecks
+    with AsyncCancelableTests {
 
   // В некоторых случаях, можно встретить, что заглушки сравниваются как Json,
   // после вызова asJson. Это связано с тем, что поле pathPattern имеет тип Option[Regex],
@@ -52,19 +55,6 @@ trait HttpStubDAOSpecBehaviors[F[_]] extends AsyncFunSuiteLike with Matchers wit
 
   implicit def M: Monad[F]
   implicit def fToFuture[T](fwh: F[T]): Future[T]
-
-  type TestName         = String Refined NonEmpty
-  type CancelTestReason = String Refined NonEmpty
-
-  /**
-   * canceledTests возвращает словарь содержащий имена тестов, которые необходимо отменить и причину отмены. Это может
-   * быть связано с тем, что конкретная реализация не поддерживает требуемую функциональность или это работает иначе, но
-   * без ущерба для конечного пользователя mockingbird.
-   */
-  def canceledTests: Map[TestName, CancelTestReason] = Map.empty
-
-  override def withFixture(test: NoArgAsyncTest): FutureOutcome =
-    canceledTests.get(refineV[NonEmpty](test.name).value).map(FutureOutcome.canceled(_)).getOrElse(test())
 
   def dao: HttpStubDAO[F]
 

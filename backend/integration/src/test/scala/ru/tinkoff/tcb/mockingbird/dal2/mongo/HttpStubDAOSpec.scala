@@ -9,8 +9,7 @@ import com.dimafeng.testcontainers.ContainerDef
 import com.dimafeng.testcontainers.GenericContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
 import eu.timepit.refined.auto.*
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.refineMV
+import eu.timepit.refined.types.string.NonEmptyString
 import org.mongodb.scala.MongoClient
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.MongoDatabase
@@ -68,7 +67,7 @@ class HttpStubDAOSpec
     super.afterEach()
 
   override val canceledTests: Map[TestName, CancelTestReason] = Map(
-    refineMV[NonEmpty]("Получение списка всех заглушек (fetch): фильтр query по pathPattern") ->
+    NonEmptyString("Получение списка всех заглушек (fetch): фильтр query по pathPattern") ->
       """MongoDB не позволяет искать по вхождению подстроки в регулярное выражение, нет
 возможности преобразовать регулярное выражение в обычную строку над которой
 возможна операция regexMatch."""

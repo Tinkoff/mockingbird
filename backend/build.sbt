@@ -44,7 +44,7 @@ val examples = (project in file("examples"))
     ),
   )
   .settings(
-    Compile / doc / sources := (file("examples/src") ** "*.scala").get,
+    Compile / doc / sources := (file("examples/src/main") ** "*.scala").get,
     Compile / doc / scalacOptions ++= Seq("-groups", "-skip-packages", "sttp")
   )
   .settings(

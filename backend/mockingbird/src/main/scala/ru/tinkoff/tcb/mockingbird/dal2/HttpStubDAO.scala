@@ -2,76 +2,17 @@ package ru.tinkoff.tcb.mockingbird.dal2
 
 import java.time.Instant
 import scala.annotation.implicitNotFound
-import scala.util.matching.Regex
 
 import cats.tagless.autoFunctorK
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.collection.NonEmpty
-import eu.timepit.refined.numeric.NonNegative
-import eu.timepit.refined.numeric.Positive
 import simulacrum.typeclass
 
 import ru.tinkoff.tcb.dataaccess.UpdateResult
 import ru.tinkoff.tcb.mockingbird.api.request.StubPatch
-import ru.tinkoff.tcb.mockingbird.model.HttpMethod
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubFetchParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubFindParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubMatchParams
 import ru.tinkoff.tcb.mockingbird.model.HttpStub
-import ru.tinkoff.tcb.mockingbird.model.Scope
 import ru.tinkoff.tcb.utils.id.SID
-
-/**
- * Потенциально заглушка может сопоставляться с мокируемым путям или как точное соответствие или регулярное выражения,
- * которому удовлетворяет путь на который пришел запрос.
- */
-sealed trait StubPath extends Serializable with Product
-final case class StubExactlyPath(value: String Refined NonEmpty) extends StubPath
-final case class StubPathPattern(value: Regex) extends StubPath
-
-/**
- * Параметры для поиска заглушек.
- *
- * @param scope
- * @param pathPattern
- *   представляет собой или строку, которая соответствует точному пути, или регулярное выражение. Заглушка может
- *   содержать или одно, или другое.
- * @param method
- */
-final case class StubFindParams(scope: Scope, path: StubPath, method: HttpMethod)
-
-/**
- * Параметры для подбора заглушек подходящих под указанный путь.
- *
- * @param scope
- * @param path
- *   Путь который был передан в mockingbird при вызове заглушки. Подходящая у подходящей заглушки поле path будет в
- *   точности равно этому пути или переданный путь будет соотвествовать регулярному выражению хранимому в поле
- *   pathPattern.
- * @param method
- */
-final case class StubMatchParams(scope: Scope, path: String, method: HttpMethod)
-
-/**
- * Параметры для отбора заглушек для отображения их списка в UI.
- *
- * @param page
- *   номер страницы для которой формируется список заглушек
- * @param query
- *   строка запроса, рассматривается как точный ID заглушки или используется как регулярное выражения и сопоставляется с
- *   полями name, path, pathPattern
- * @param service
- *   имя сервиса к которому относится заглушка (поле serviceSuffix)
- * @param labels
- *   список лейблов, которыми должна быть отмечена заглушка, все перечисленные лейблы должны содержаться в поле labels
- *   заглушки, хранящейся в хранилище
- * @param count
- *   количество заглушек, отображаемых на странице
- */
-final case class StubFetchParams(
-    page: Int Refined NonNegative,
-    query: Option[String],
-    service: Option[String],
-    labels: Seq[String],
-    count: Int Refined Positive
-)
 
 @implicitNotFound("Could not find an instance of HttpStubDAO for ${F}")
 @typeclass @autoFunctorK

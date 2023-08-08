@@ -28,10 +28,10 @@ import ru.tinkoff.tcb.mockingbird.dal.ScenarioDAO
 import ru.tinkoff.tcb.mockingbird.dal.ServiceDAO
 import ru.tinkoff.tcb.mockingbird.dal.SourceConfigurationDAO
 import ru.tinkoff.tcb.mockingbird.dal2.HttpStubDAO
-import ru.tinkoff.tcb.mockingbird.dal2.StubExactlyPath
-import ru.tinkoff.tcb.mockingbird.dal2.StubFetchParams
-import ru.tinkoff.tcb.mockingbird.dal2.StubFindParams
-import ru.tinkoff.tcb.mockingbird.dal2.StubPathPattern
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubExactlyPath
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubFetchParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubFindParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubPathPattern
 import ru.tinkoff.tcb.mockingbird.error.*
 import ru.tinkoff.tcb.mockingbird.error.DuplicationError
 import ru.tinkoff.tcb.mockingbird.error.ValidationError

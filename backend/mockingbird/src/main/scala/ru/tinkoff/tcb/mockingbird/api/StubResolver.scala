@@ -8,7 +8,7 @@ import zio.interop.catz.core.*
 import ru.tinkoff.tcb.logging.MDCLogging
 import ru.tinkoff.tcb.mockingbird.dal.PersistentStateDAO
 import ru.tinkoff.tcb.mockingbird.dal2.HttpStubDAO
-import ru.tinkoff.tcb.mockingbird.dal2.StubMatchParams
+import ru.tinkoff.tcb.mockingbird.dal2.model.StubMatchParams
 import ru.tinkoff.tcb.mockingbird.error.*
 import ru.tinkoff.tcb.mockingbird.misc.Renderable.ops.*
 import ru.tinkoff.tcb.mockingbird.model.HttpMethod
