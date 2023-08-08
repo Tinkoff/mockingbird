@@ -18,13 +18,15 @@ import ru.tinkoff.tcb.mockingbird.model.FillResponse
 import ru.tinkoff.tcb.mockingbird.model.GProxyResponse
 import ru.tinkoff.tcb.mockingbird.model.PersistentState
 import ru.tinkoff.tcb.mockingbird.model.Scope
+import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 import ru.tinkoff.tcb.utils.transformation.json.*
 
 trait GrpcRequestHandler {
   def exec(bytes: Array[Byte]): RIO[WLD & RequestContext, Array[Byte]]
 }
 
-class GrpcRequestHandlerImpl(stubResolver: GrpcStubResolver) extends GrpcRequestHandler {
+class GrpcRequestHandlerImpl(stubResolver: GrpcStubResolver, implicit val jsSandbox: GraalJsSandbox)
+    extends GrpcRequestHandler {
   override def exec(bytes: Array[Byte]): RIO[WLD & RequestContext, Array[Byte]] =
     for {
       context <- ZIO.service[RequestContext]
@@ -86,7 +88,8 @@ class GrpcRequestHandlerImpl(stubResolver: GrpcStubResolver) extends GrpcRequest
 }
 
 object GrpcRequestHandlerImpl {
-  val live: URLayer[GrpcStubResolver, GrpcRequestHandler] = ZLayer.fromFunction(new GrpcRequestHandlerImpl(_))
+  val live: URLayer[GrpcStubResolver & GraalJsSandbox, GrpcRequestHandlerImpl] =
+    ZLayer.fromFunction(new GrpcRequestHandlerImpl(_, _))
 }
 
 object GrpcRequestHandler {

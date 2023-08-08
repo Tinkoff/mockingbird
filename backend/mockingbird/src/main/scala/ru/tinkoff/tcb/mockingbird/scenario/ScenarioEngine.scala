@@ -42,6 +42,7 @@ import ru.tinkoff.tcb.mockingbird.model.XMLCallbackRequest
 import ru.tinkoff.tcb.mockingbird.model.XmlOutput
 import ru.tinkoff.tcb.mockingbird.stream.SDFetcher
 import ru.tinkoff.tcb.utils.id.SID
+import ru.tinkoff.tcb.utils.sandboxing.GraalJsSandbox
 import ru.tinkoff.tcb.utils.transformation.json.*
 import ru.tinkoff.tcb.utils.transformation.string.*
 import ru.tinkoff.tcb.utils.transformation.xml.*
@@ -62,6 +63,7 @@ final class ScenarioEngine(
     stateDAO: PersistentStateDAO[Task],
     resolver: ScenarioResolver,
     fetcher: SDFetcher,
+    implicit val jsSandbox: GraalJsSandbox,
     private val httpBackend: SttpBackend[Task, ?]
 ) extends CallbackEngine {
   private val log = MDCLogging.`for`[WLD](this)
@@ -222,7 +224,8 @@ object ScenarioEngine {
       psd        <- ZIO.service[PersistentStateDAO[Task]]
       resolver   <- ZIO.service[ScenarioResolver]
       fetcher    <- ZIO.service[SDFetcher]
+      jsSandbox  <- ZIO.service[GraalJsSandbox]
       sttpClient <- ZIO.service[SttpBackend[Task, Any]]
-    } yield new ScenarioEngine(sd, psd, resolver, fetcher, sttpClient)
+    } yield new ScenarioEngine(sd, psd, resolver, fetcher, jsSandbox, sttpClient)
   }
 }
